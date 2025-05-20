@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AdminActivityLog;
+use Illuminate\Http\Request;
+
+class AdminActivityLogController extends Controller
+{
+    /**
+     * Clear all logs older than a specific date.
+     */
+    public function clearOldLogs(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date|before_or_equal:today',
+        ]);
+        
+        $date = $request->input('date');
+        $deletedCount = AdminActivityLog::whereDate('created_at', '<=', $date)->delete();
+        
+        return redirect()->route('dashboard')
+            ->with('success', "Berhasil menghapus {$deletedCount} log aktivitas.");
+    }
+}

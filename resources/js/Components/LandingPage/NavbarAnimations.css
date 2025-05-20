@@ -1,0 +1,77 @@
+/* NavbarAnimations.css */
+/* Custom animations for the navbar */
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideDown 0.3s ease forwards;
+}
+
+.mobile-menu-exit {
+  animation: slideUp 0.3s ease forwards;
+}
+
+/* Hamburger icon animations */
+.bar-top-open {
+  transform: rotate(45deg) translate(0, 6px);
+}
+
+.bar-middle-open {
+  opacity: 0;
+}
+
+.bar-bottom-open {
+  transform: rotate(-45deg) translate(0, -6px);
+}
+
+/* Active link indicator */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #2563eb; /* blue-600 */
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 70%;
+}
+
+/* Mobile nav item animation */
+.mobile-nav-item {
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-item:hover {
+  transform: translateX(5px);
+  background-color: rgba(243, 244, 246, 0.7); /* gray-100 with opacity */
+}

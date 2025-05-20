@@ -1,0 +1,42 @@
+/* Custom animations for ikon-ikon di hero section */
+@keyframes floatAnim {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+@keyframes pulseAnim {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.icon-float {
+    animation: floatAnim 5s ease-in-out infinite;
+}
+
+.icon-float-delay1 {
+    animation: floatAnim 5s ease-in-out infinite 0.8s;
+}
+
+.icon-float-delay2 {
+    animation: floatAnim 5s ease-in-out infinite 1.6s;
+}
+
+.icon-pulse {
+    animation: pulseAnim 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.icon-pulse-delay1 {
+    animation: pulseAnim 4s cubic-bezier(0.4, 0, 0.6, 1) infinite 1.5s;
+}
+
+.icon-pulse-delay2 {
+    animation: pulseAnim 4s cubic-bezier(0.4, 0, 0.6, 1) infinite 2.7s;
+}
