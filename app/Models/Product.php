@@ -17,7 +17,7 @@ class Product extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id_pengguna',
+        'user_id',
         'global_product_id',
         'nama_produk',
         'kode_produk',
@@ -47,7 +47,7 @@ class Product extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_pengguna');
+        return $this->belongsTo(User::class, 'user_id');
     }
     
     /**

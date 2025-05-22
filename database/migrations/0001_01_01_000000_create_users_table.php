@@ -11,13 +11,30 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        // Create admins table (former 'users' table with added is_super_admin column)
+        Schema::create('admins', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_super_admin')->default(false);
             $table->rememberToken();
+            $table->timestamps();
+        });
+
+        // Create mobile users table (new 'users' table with mobile-specific columns)
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('phoneNumber', 50)->unique();
+            $table->string('storeName');
+            $table->text('storeAddress');
+            $table->string('passwordHash');
+            $table->text('profileImagePath')->nullable();
+            $table->string('kodeQR')->nullable()->unique()->comment('Kode QRIS (Quick Response Code Indonesian Standard) untuk pembayaran di aplikasi mobile');
+            $table->timestamp('last_sync_time')->nullable()->comment('Timestamp sinkronisasi terakhir dari server');
             $table->timestamps();
         });
 
@@ -42,6 +59,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('admins');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

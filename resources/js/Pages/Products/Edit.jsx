@@ -86,23 +86,16 @@ export default function Edit({ product }) {
             gambar_type: data.gambar_produk ? data.gambar_produk.type : null
         });
 
-    const formData = new FormData();
-    formData.append('kode_produk', data.kode_produk);
-    formData.append('nama_produk', data.nama_produk);
-    formData.append('kategori', data.kategori || '');
-    formData.append('merek', data.merek || '');
-    formData.append('deskripsi', data.deskripsi || '');
-    formData.append('is_active', data.is_active ? '1' : '0');
-    
-    // Gunakan format flag yang sama dengan backend (_kode_changed bukan _changed_kode_produk)
-    formData.append('_kode_changed', isKodeChanged ? '1' : '0');
-    formData.append('_nama_changed', isNamaChanged ? '1' : '0');
-    formData.append('_gambar_changed', isGambarChanged ? '1' : '0');
-    
-    // Tambah flag debugging tambahan dengan format alternatif untuk memastikan
-    formData.append('kode_produk_changed', isKodeChanged ? 'YES' : 'NO');
-    formData.append('nama_produk_changed', isNamaChanged ? 'YES' : 'NO');
-    formData.append('gambar_changed', isGambarChanged ? 'YES' : 'NO');
+        const formData = new FormData();
+        formData.append('kode_produk', data.kode_produk);
+        formData.append('nama_produk', data.nama_produk);
+        formData.append('kategori', data.kategori || '');
+        formData.append('merek', data.merek || '');
+        formData.append('deskripsi', data.deskripsi || '');
+        formData.append('is_active', data.is_active ? '1' : '0');
+        formData.append('_changed_kode_produk', isKodeChanged ? '1' : '0');
+        formData.append('_changed_nama_produk', isNamaChanged ? '1' : '0');
+        formData.append('_changed_gambar_produk', isGambarChanged ? '1' : '0');
         if (isGambarChanged) {
             formData.append('gambar_produk', data.gambar_produk);
         }

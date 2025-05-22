@@ -21,14 +21,14 @@ class TransactionSeeder extends Seeder
         
         if ($users->count() > 0) {
             $user1 = $users[0]; // Budi
-            $customers1 = Customer::where('id_pengguna', $user1->id)->get();
-            $products1 = Product::where('id_pengguna', $user1->id)->get();
+            $customers1 = Customer::where('user_id', $user1->id)->get();
+            $products1 = Product::where('user_id', $user1->id)->get();
             
             // Jika ada customer dan produk untuk user 1
             if ($customers1->count() > 0 && $products1->count() > 0) {
                 // Transaksi tunai untuk pelanggan pertama
                 Transaction::create([
-                    'id_pengguna' => $user1->id,
+                    'user_id' => $user1->id,
                     'tanggal_transaksi' => Carbon::now()->subDays(2),
                     'total_belanja' => 24500,
                     'total_modal' => 17000,
@@ -61,7 +61,7 @@ class TransactionSeeder extends Seeder
                 
                 // Transaksi kredit untuk pelanggan kedua
                 $kreditTransaction = Transaction::create([
-                    'id_pengguna' => $user1->id,
+                    'user_id' => $user1->id,
                     'tanggal_transaksi' => Carbon::now()->subDays(1),
                     'total_belanja' => 16000,
                     'total_modal' => 10000,
@@ -85,7 +85,7 @@ class TransactionSeeder extends Seeder
                 
                 // Transaksi pembayaran kredit berikutnya
                 Transaction::create([
-                    'id_pengguna' => $user1->id,
+                    'user_id' => $user1->id,
                     'tanggal_transaksi' => Carbon::now(),
                     'total_belanja' => 10000,
                     'total_modal' => 0, // Tidak ada modal karena pembayaran hutang
@@ -107,7 +107,7 @@ class TransactionSeeder extends Seeder
                 if ($customers1->count() > 2) {
                     // Transaksi kredit untuk pelanggan ketiga
                     Transaction::create([
-                        'id_pengguna' => $user1->id,
+                        'user_id' => $user1->id,
                         'tanggal_transaksi' => Carbon::now()->subDays(5),
                         'total_belanja' => 45000,
                         'total_modal' => 30000,
@@ -134,13 +134,13 @@ class TransactionSeeder extends Seeder
             // Transaksi untuk user kedua jika ada
             if ($users->count() > 1) {
                 $user2 = $users[1]; // Ani
-                $customers2 = Customer::where('id_pengguna', $user2->id)->get();
-                $products2 = Product::where('id_pengguna', $user2->id)->get();
+                $customers2 = Customer::where('user_id', $user2->id)->get();
+                $products2 = Product::where('user_id', $user2->id)->get();
                 
                 if ($customers2->count() > 0 && $products2->count() > 0) {
                     // Transaksi QRIS
                     Transaction::create([
-                        'id_pengguna' => $user2->id,
+                        'user_id' => $user2->id,
                         'tanggal_transaksi' => Carbon::now()->subDays(3),
                         'total_belanja' => 30000,
                         'total_modal' => 24000,
@@ -164,7 +164,7 @@ class TransactionSeeder extends Seeder
                     
                     // Transaksi kredit untuk pelanggan
                     Transaction::create([
-                        'id_pengguna' => $user2->id,
+                        'user_id' => $user2->id,
                         'tanggal_transaksi' => Carbon::now()->subDays(2),
                         'total_belanja' => 25000,
                         'total_modal' => 18000,
@@ -189,7 +189,7 @@ class TransactionSeeder extends Seeder
                     if ($customers2->count() > 1) {
                         // Transaksi kredit untuk pelanggan kedua
                         Transaction::create([
-                            'id_pengguna' => $user2->id,
+                            'user_id' => $user2->id,
                             'tanggal_transaksi' => Carbon::now()->subDays(4),
                             'total_belanja' => 36000,
                             'total_modal' => 24000,

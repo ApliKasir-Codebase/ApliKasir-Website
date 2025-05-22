@@ -34,5 +34,15 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'storage_bucket' => env('FIREBASE_STORAGE_BUCKET', 'aplikasir-database.appspot.com'),
+        'private_key_id' => env('FIREBASE_PRIVATE_KEY_ID'),
+        'private_key' => env('FIREBASE_PRIVATE_KEY'),
+        'client_email' => env('FIREBASE_CLIENT_EMAIL'),
+        'client_id' => env('FIREBASE_CLIENT_ID'),
+        'client_x509_cert_url' => env('FIREBASE_CLIENT_X509_CERT_URL'),
+    ],
 
 ];

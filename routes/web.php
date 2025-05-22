@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FirebaseTestController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -65,11 +66,18 @@ Route::middleware('auth')->group(function () {
     // Rute untuk halaman pengguna
     Route::resource('users', UserController::class);
     
+    // Rute untuk QR Code
+    Route::get('/users/{user}/qrcode/regenerate', [\App\Http\Controllers\QRCodeController::class, 'regenerate'])->name('users.qrcode.regenerate');
+    Route::get('/users/{user}/qrcode/download', [\App\Http\Controllers\QRCodeController::class, 'download'])->name('users.qrcode.download');
+    
     // Rute untuk halaman produk
     Route::resource('products', \App\Http\Controllers\ProductController::class);
     
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Rute untuk Firebase Storage
+    Route::get('/firebase-test', [FirebaseTestController::class, 'testFirebaseStorage'])->name('firebase.test');
 });
 
 // Rute Autentikasi lainnya (Breeze sudah membuat ini)

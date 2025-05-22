@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 return new class extends Migration
 {
@@ -13,24 +14,28 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_pengguna')->constrained('users', 'id')->cascadeOnDelete();
-            $table->foreignId('global_product_id')->nullable()->constrained('global_products', 'id')->nullOnDelete(); // Reference ke produk global
+            // GANTI: id_pengguna menjadi user_id
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('global_product_id')->nullable()->constrained('global_products')->nullOnDelete();
             $table->string('nama_produk');
             $table->string('kode_produk', 100)->nullable();
             $table->integer('jumlah_produk')->default(0);
             $table->decimal('harga_modal', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2)->default(0);
-            $table->string('gambar_produk')->nullable(); // Bisa gunakan gambar dari global atau custom
+            $table->string('gambar_produk')->nullable();
             $table->timestamps();
-            $table->boolean('is_deleted')->default(false);
-            $table->timestamp('deleted_at')->nullable();
+            // HAPUS: $table->boolean('is_deleted')->default(false);
+            // HAPUS: $table->timestamp('deleted_at')->nullable();
+            // TAMBAH: Laravel SoftDeletes
+            $table->softDeletes(); // Ini akan membuat kolom deleted_at
 
             // Indexes
-            $table->index('id_pengguna');
-            $table->index(['id_pengguna', 'kode_produk']);
-            $table->index('global_product_id'); // Index untuk global product
+            $table->index('user_id'); // Sesuaikan dengan nama baru
+            $table->index(['user_id', 'kode_produk']); // Sesuaikan dengan nama baru
+            $table->index('global_product_id');
             // Unique constraint per user
-            $table->unique(['id_pengguna', 'kode_produk'], 'unique_product_code_user');
+            // Sesuaikan nama kolom di unique constraint
+            $table->unique(['user_id', 'kode_produk'], 'unique_product_code_user');
         });
     }
 

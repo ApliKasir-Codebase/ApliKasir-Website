@@ -49,7 +49,7 @@ class GlobalProductUserSeeder extends Seeder
                     foreach ($randomGlobalProducts as $globalProduct) {
                         // Create user product based on global product
                         Product::create([
-                            'id_pengguna' => $user->id,
+                            'user_id' => $user->id,
                             'global_product_id' => $globalProduct->id,
                             'nama_produk' => $globalProduct->nama_produk,
                             'kode_produk' => $storePrefix . '-' . $globalProduct->kode_produk,

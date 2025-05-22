@@ -99,15 +99,15 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+        'admins' => [ // Pastikan ini untuk provider 'admins'
+            'provider' => 'admins',
+            'table' => 'admin_password_reset_tokens', // Ganti ke tabel baru
             'expire' => 60,
             'throttle' => 60,
         ],
-        'admins' => [
-            'provider' => 'admins',
-            'table' => 'password_reset_tokens',
+        'users' => [ // Ini untuk provider 'users' (mobile users)
+            'provider' => 'users',
+            'table' => 'password_reset_tokens', // Biarkan ini untuk mobile users
             'expire' => 60,
             'throttle' => 60,
         ],

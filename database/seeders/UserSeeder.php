@@ -22,7 +22,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Toko Budi Jaya',
                 'storeAddress' => 'Jl. Kemanggisan No. 123, Jakarta Barat',
                 'passwordHash' => Hash::make('Budi123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-BUDI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now(),
             ],
             [
@@ -32,7 +33,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Mini Market Ani',
                 'storeAddress' => 'Jl. Raya Bogor KM 5, Depok',
                 'passwordHash' => Hash::make('Ani123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-ANI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now(),
             ],
             [
@@ -42,7 +44,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Warung Siska',
                 'storeAddress' => 'Jl. Margonda Raya No. 54, Depok',
                 'passwordHash' => Hash::make('Siska123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-SISKA-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => null,
             ],
             [
@@ -52,7 +55,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Warung Makan Berkah',
                 'storeAddress' => 'Jl. Veteran No. 25, Bandung',
                 'passwordHash' => Hash::make('Ahmad123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-AHMAD-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now(),
             ],
             [
@@ -62,7 +66,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Toko Elektronik Dewi',
                 'storeAddress' => 'Jl. Sudirman Blok A3, Jakarta Selatan',
                 'passwordHash' => Hash::make('Dewi123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-DEWI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now(),
             ],
             [
@@ -72,7 +77,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Kios Buah Rudi',
                 'storeAddress' => 'Jl. Flamboyan No. 12, Surabaya',
                 'passwordHash' => Hash::make('Rudi123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-RUDI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now()->subDays(5),
             ],
             [
@@ -82,7 +88,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Butik Siti',
                 'storeAddress' => 'Jl. Gatot Subroto No. 45, Jakarta Pusat',
                 'passwordHash' => Hash::make('Siti123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-SITI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now()->subDays(2),
             ],
             [
@@ -92,7 +99,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Mebel Jaya',
                 'storeAddress' => 'Jl. Pahlawan No. 17, Solo',
                 'passwordHash' => Hash::make('Joko123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-JOKO-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now()->subDays(1),
             ],
             [
@@ -102,7 +110,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Salon Maya',
                 'storeAddress' => 'Jl. Diponegoro No. 78, Semarang',
                 'passwordHash' => Hash::make('Maya123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-MAYA-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => null,
             ],
             [
@@ -112,7 +121,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Bengkel Hadi',
                 'storeAddress' => 'Jl. Raya Cibubur No. 56, Jakarta Timur',
                 'passwordHash' => Hash::make('Hadi123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-HADI-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now()->subDays(3),
             ],
             [
@@ -122,7 +132,8 @@ class UserSeeder extends Seeder
                 'storeName' => 'Apotek Sehat',
                 'storeAddress' => 'Jl. Antasari No. 34, Banjarmasin',
                 'passwordHash' => Hash::make('Rina123!'),
-                'profileImagePath' => null,
+                'profileImagePath' => 'https://firebasestorage.googleapis.com/v0/b/aplikasir-database.appspot.com/o/profile_images%2Fprofile_1744869027062-881212378.png?alt=media&token=4ca2b32f-98ad-454c-a6b6-069593fdd241',
+                'kodeQR' => 'QR-RINA-' . strtoupper(substr(md5(rand()), 0, 8)),
                 'last_sync_time' => now()->subWeeks(1),
             ],
         ];

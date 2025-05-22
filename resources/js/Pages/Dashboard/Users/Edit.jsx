@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import Sidebar from '@/Components/Dashboard/Sidebar';
 import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
+import axios from 'axios';
 
 export default function EditUser({ auth, id }) {
     // In a real app, you would fetch the user data based on the ID
@@ -20,7 +21,45 @@ export default function EditUser({ auth, id }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route('users.update', id));
+        
+        // Buat objek FormData
+        const formData = new FormData();
+        
+        // Tambahkan data fields
+        formData.append('name', data.name);
+        formData.append('email', data.email);
+        formData.append('username', data.username);
+        formData.append('phone', data.phone);
+        
+        // Tambahkan file jika ada
+        // if (profileImageFile) {
+        //     formData.append('profileImage', profileImageFile);
+            
+        //     // Log file untuk debug
+        //     console.log('Appending profile image to form data:', {
+        //         name: profileImageFile.name,
+        //         size: profileImageFile.size,
+        //         type: profileImageFile.type
+        //     });
+        // }
+        
+        // Tetapkan method dan headers dengan benar
+        axios.put(`/users/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            // Handle success
+            console.log('Update success', response);
+            alert('Data pengguna berhasil diperbarui');
+        })
+        .catch(error => {
+            // Handle error
+            console.error('Update error', error);
+            alert('Error saat mengupdate: ' + (error.response?.data?.message || 'Terjadi kesalahan'));
+        });
     };
 
     return (

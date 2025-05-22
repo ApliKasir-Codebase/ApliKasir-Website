@@ -3,8 +3,9 @@ import { Head, Link } from '@inertiajs/react';
 import Sidebar from '@/Components/Dashboard/Sidebar';
 import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
 import PageTransition from '@/Components/PageTransition';
+import FlashMessage from '@/Components/FlashMessage';
 
-export default function Show({ user, auth, customerDebts }) {
+export default function Show({ user, auth, customerDebts, flash, qrCodeDataUri }) {
     return (
         <div className="min-h-screen bg-white">
             <Head title={`Pengguna - ${user.name}`} />
@@ -23,6 +24,8 @@ export default function Show({ user, auth, customerDebts }) {
                 <Sidebar />                {/* Konten Utama */}
                 <main className="flex-1 ml-64 p-6 lg:p-8 overflow-y-auto bg-white">
                     <PageTransition>
+                        {flash?.success && <FlashMessage message={flash.success} type="success" />}
+                        
                         <div className="overflow-hidden bg-white shadow sm:rounded-lg">
                             <div className="p-6">
                                 <div className="mb-6 flex justify-between">
@@ -43,32 +46,96 @@ export default function Show({ user, auth, customerDebts }) {
                                             Kembali
                                         </Link>
                                     </div>
-                                </div>
-
-                                <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+                                </div>                                <div className="overflow-hidden bg-white shadow sm:rounded-lg">
                                     <div className="border-t border-gray-200">
                                         <dl>
                                             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                                <dt className="text-sm font-medium text-gray-500">Foto Profil</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                                    {user.profileImagePath ? (
+                                                        <div className="flex items-center">
+                                                            <img 
+                                                                src={user.profileImagePath} 
+                                                                alt={`Foto profil ${user.name}`}
+                                                                className="h-24 w-24 rounded-full object-cover border border-gray-200"
+                                                            />
+                                                            <a 
+                                                                href={user.profileImagePath} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="ml-4 text-blue-500 hover:text-blue-700 text-sm"
+                                                            >
+                                                                Lihat gambar asli
+                                                            </a>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-500">Tidak ada foto profil</span>
+                                                    )}
+                                                </dd>
+                                            </div>
+                                            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Nama</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{user.name}</dd>
                                             </div>
-                                            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Email</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{user.email}</dd>
                                             </div>
-                                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Nomor Telepon</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{user.phoneNumber}</dd>
                                             </div>
                                             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Nama Toko</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{user.storeName}</dd>
-                                            </div>
-                                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            </div>                                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Alamat Toko</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{user.storeAddress}</dd>
+                                            </div>                                            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">                                                <dt className="text-sm font-medium text-gray-500">Kode QR</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                                    {user.kodeQR ? (
+                                                        <div className="flex flex-col sm:flex-row sm:items-center">
+                                                            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
+                                                                {user.kodeQR}
+                                                            </span>
+                                                            {qrCodeDataUri && (
+                                                                <div className="mt-3 sm:mt-0 sm:ml-6">
+                                                                    <img 
+                                                                        src={qrCodeDataUri} 
+                                                                        alt={`QR Code untuk ${user.name}`}
+                                                                        className="h-32 w-32 border border-gray-200"
+                                                                    />
+                                                                    <div className="mt-2 text-sm text-gray-500">
+                                                                        QR Code untuk autentikasi aplikasi mobile
+                                                                    </div>
+                                                                    <div className="mt-2 flex space-x-2">
+                                                                        <a 
+                                                                            href={route('users.qrcode.download', user.id)}
+                                                                            className="text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                                                        >
+                                                                            Download
+                                                                        </a>
+                                                                        <a 
+                                                                            href={route('users.qrcode.regenerate', user.id)}
+                                                                            className="text-sm px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+                                                                            onClick={(e) => {
+                                                                                if (!confirm('Anda yakin ingin membuat ulang kode QR? Kode lama tidak akan berfungsi lagi.')) {
+                                                                                    e.preventDefault();
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            Buat Ulang
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-500">Tidak ada kode QR</span>
+                                                    )}
+                                                </dd>
                                             </div>
-                                            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt className="text-sm font-medium text-gray-500">Tanggal Bergabung</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
                                                     {new Date(user.created_at).toLocaleDateString('id-ID', {

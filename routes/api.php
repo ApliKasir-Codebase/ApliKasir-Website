@@ -15,14 +15,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth:api'])->group(function () {
-    // Route untuk katalog produk global
-    Route::prefix('catalog')->group(function () {
-        Route::get('/', [ProductCatalogController::class, 'listCatalog']);
-        Route::get('/categories', [ProductCatalogController::class, 'getCategories']);
-        Route::get('/brands', [ProductCatalogController::class, 'getBrands']);
-        Route::post('/add-to-inventory', [ProductCatalogController::class, 'addProductToInventory']);
-    });
+// Route untuk katalog produk global
+Route::prefix('catalog')->group(function () {
+    Route::get('/', [ProductCatalogController::class, 'listCatalog']);
+    Route::get('/categories', [ProductCatalogController::class, 'getCategories']);
+    Route::get('/brands', [ProductCatalogController::class, 'getBrands']);
+    Route::post('/add-to-inventory', [ProductCatalogController::class, 'addProductToInventory']);
 });
 
 // Fallback route untuk API

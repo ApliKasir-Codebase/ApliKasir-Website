@@ -42,7 +42,7 @@ class ProductSeeder extends Seeder
                 foreach ($selectedGlobalProducts as $globalProduct) {
                     // Contoh produk dengan harga dan stok yang berbeda
                     Product::create([
-                        'id_pengguna' => $user->id,
+                        'user_id' => $user->id,
                         'global_product_id' => $globalProduct->id,
                         'nama_produk' => $globalProduct->nama_produk,
                         'kode_produk' => $storePrefix . '-' . $globalProduct->kode_produk,
@@ -55,7 +55,7 @@ class ProductSeeder extends Seeder
                 
                 // Buat juga contoh produk custom (tidak dari katalog global)
                 Product::create([
-                    'id_pengguna' => $user->id,
+                    'user_id' => $user->id,
                     'global_product_id' => null, // Produk custom
                     'nama_produk' => 'Produk Custom Toko',
                     'kode_produk' => $storePrefix . '-CUSTOM001',

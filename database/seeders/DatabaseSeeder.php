@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class, // Contoh produk user (untuk demo)
             CustomerSeeder::class, // Pelanggan
             TransactionSeeder::class, // Transaksi
+            AdminActivityLogSeeder::class, // Log aktivitas admin
+            SyncLogSeeder::class, // Log sinkronisasi
         ]);
     }
 }

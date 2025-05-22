@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -18,11 +19,9 @@ class Customer extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id_pengguna',
+        'user_id',
         'nama_pelanggan',
-        'nomor_telepon',
-        'is_deleted',
-        'deleted_at'
+        'nomor_telepon'
     ];
 
     /**
@@ -31,7 +30,6 @@ class Customer extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_deleted' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 
@@ -40,7 +38,7 @@ class Customer extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_pengguna');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -56,6 +54,7 @@ class Customer extends Model
      */
     public function scopeActive(Builder $query): void
     {
-        $query->where('is_deleted', false);
+        // No need to add additional conditions with SoftDeletes
+        // as it will automatically exclude deleted records
     }
 }
