@@ -25,6 +25,16 @@ class TestUserUpdate extends Command
     protected $description = 'Test user update functionality including partial updates and firebase uploads';
 
     /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -90,9 +100,9 @@ class TestUserUpdate extends Command
         
         $this->info('Updated name to: ' . $user->name);
         if ($user->name === $newName) {
-            $this->info(' Name updated successfully');
+            $this->info('✓ Name updated successfully');
         } else {
-            $this->error(' Name update failed');
+            $this->error('✗ Name update failed');
         }
         
         $this->newLine();
@@ -106,9 +116,9 @@ class TestUserUpdate extends Command
         
         $this->info('Updated QR code to: ' . $user->kodeQR);
         if ($user->kodeQR === $newQrCode) {
-            $this->info(' QR code updated successfully');
+            $this->info('✓ QR code updated successfully');
         } else {
-            $this->error(' QR code update failed');
+            $this->error('✗ QR code update failed');
         }
         
         // 5. Test generating QR code
@@ -120,9 +130,9 @@ class TestUserUpdate extends Command
             $this->info('Data URI length: ' . strlen($qrDataUri) . ' characters');
             
             if (strlen($qrDataUri) > 100) {
-                $this->info(' QR code generation successful');
+                $this->info('✓ QR code generation successful');
             } else {
-                $this->error(' QR code generation failed or returned invalid data');
+                $this->error('✗ QR code generation failed or returned invalid data');
             }
         }
         
@@ -136,9 +146,9 @@ class TestUserUpdate extends Command
         
         $exists = User::where('id', $userId)->exists();
         if (!$exists) {
-            $this->info(' Test user deleted successfully');
+            $this->info('✓ Test user deleted successfully');
         } else {
-            $this->error(' Failed to delete test user');
+            $this->error('✗ Failed to delete test user');
         }
         
         $this->newLine();

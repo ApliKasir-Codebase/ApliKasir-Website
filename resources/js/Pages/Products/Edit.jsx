@@ -148,8 +148,7 @@ export default function Edit({ product }) {
             
             <DashboardHeader 
                 pageTitle="Edit Produk" 
-                breadcrumb={[
-                    { label: 'Produk', url: route('products.index') },
+                breadcrumb={[                    { label: 'Produk', url: route('products.index') },
                     { label: product.nama_produk, url: route('products.show', product.id) },
                     { label: 'Edit' }
                 ]}

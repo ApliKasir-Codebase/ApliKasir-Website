@@ -11,6 +11,13 @@ class GlobalProduct extends Model
     use HasFactory;
     
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'products';
+    
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -35,15 +42,33 @@ class GlobalProduct extends Model
     ];
     
     /**
-     * Get all the user products that reference this global product.
+     * Get all the transactions that reference this product.
      * 
-     * Produk global berfungsi sebagai katalog yang bisa dipilih oleh pengguna.
-     * Pengguna bisa memilih produk dari katalog global ini untuk ditambahkan
-     * ke inventaris toko mereka dengan penyesuaian harga dan stok sesuai
-     * kebutuhan bisnis masing-masing.
+     * Produk berfungsi sebagai repositori produk yang bisa direferensikan dalam transaksi.
+     * Kode produk digunakan untuk verifikasi dan untuk katalog produk pada aplikasi pengguna.
+     * Data produk ini disinkronkan dengan aplikasi mobile untuk keperluan pencarian dan transaksi.
      */
-    public function userProducts(): HasMany
+    public function transactions()
     {
-        return $this->hasMany(Product::class, 'global_product_id');
+        return $this->hasMany(Transaction::class, 'product_id');
+    }
+    
+    /**
+     * Verify a product code against global products
+     * 
+     * Metode ini digunakan untuk memverifikasi apakah kode produk yang diberikan
+     * cocok dengan kode produk dalam repositori global. Hanya kode produk yang 
+     * dicocokkan, bukan katalog lengkap.
+     * 
+     * @param string $productCode Kode produk yang akan diverifikasi
+     * @return bool|GlobalProduct False jika tidak ditemukan, object GlobalProduct jika ditemukan
+     */
+    public static function verifyProductCode(string $productCode)
+    {
+        $globalProduct = self::where('kode_produk', $productCode)
+                           ->where('is_active', true)
+                           ->first();
+        
+        return $globalProduct ?: false;
     }
 }

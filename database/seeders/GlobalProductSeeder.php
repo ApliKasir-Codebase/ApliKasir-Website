@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\GlobalProduct;
+use App\Models\Product;
 use Illuminate\Database\Seeder;
 
 class GlobalProductSeeder extends Seeder
@@ -61,7 +61,7 @@ class GlobalProductSeeder extends Seeder
         ];
 
         foreach ($globalProducts as $product) {
-            GlobalProduct::create($product);
+            Product::create($product);
         }
     }
 }

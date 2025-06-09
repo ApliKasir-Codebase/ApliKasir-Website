@@ -180,45 +180,134 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\RedirectResponse
-     */          public function update(Request $request, User $user)    {          // Log informasi request untuk debugging
-        \Log::info('User update request details', [
+     */        public function update(Request $request, User $user)
+    {
+        // Log request lebih detail untuk debug
+        \Log::info('User update request for user ' . $user->id, [
+            'request_data' => $request->except(['profileImage']),
+            'has_password' => $request->filled('password'),
             'content_type' => $request->header('Content-Type'),
-            'request_has_file' => $request->hasFile('profileImage'),
-            'files_global' => !empty($_FILES) ? count($_FILES) : 0,
-            'files_keys' => !empty($_FILES) ? array_keys($_FILES) : [],
-            'request_all_files' => $request->allFiles(),
-        ]);
-
-        // Cek keberadaan file dengan metode yang lebih detail
+            'request_method' => $request->method(),
+            'x_file_upload' => $request->header('X-File-Upload'),
+            'x_requested_with' => $request->header('X-Requested-With'),
+            'has_file_upload_attempt' => $request->has('_file_upload_attempt'),
+            'has_profile_image_flag' => $request->has('has_profile_image'),
+            '_FILES' => !empty($_FILES) ? array_keys($_FILES) : [],
+            'file_data' => !empty($_FILES['profileImage']) ? [
+                'name' => $_FILES['profileImage']['name'] ?? 'N/A',
+                'type' => $_FILES['profileImage']['type'] ?? 'N/A',
+                'size' => $_FILES['profileImage']['size'] ?? 0,
+                'error' => $_FILES['profileImage']['error'] ?? 'N/A',
+                'tmp_name_exists' => !empty($_FILES['profileImage']['tmp_name']) ? 'Yes' : 'No'
+            ] : 'No profileImage in $_FILES'
+        ]);        // Improved file detection and handling
         $hasProfileImage = false;
         
-        // Cek keberadaan file dengan beberapa metode
-        if ($request->hasFile('profileImage') && $request->file('profileImage')->isValid()) {
-            $hasProfileImage = true;
-            \Log::info("ProfileImage detected using hasFile");
-        } 
-        // Cek melalui $_FILES global
-        else if (!empty($_FILES['profileImage']['tmp_name']) && $_FILES['profileImage']['error'] === UPLOAD_ERR_OK) {
-            // Create UploadedFile instance from $_FILES
-            $file = new \Illuminate\Http\UploadedFile(
-                $_FILES['profileImage']['tmp_name'],
-                $_FILES['profileImage']['name'],
-                $_FILES['profileImage']['type'],
-                $_FILES['profileImage']['error'],
-                true
-            );
+        // Debug logging
+        \Log::info('User update file detection checks', [
+            'has_profile_image_flag' => $request->has('has_profile_image') ? 'Yes ('.$request->input('has_profile_image').')' : 'No',
+            'x_file_upload_header' => $request->header('X-File-Upload'),
+            'x_has_image_header' => $request->header('X-Has-Image'),
+            'content_type' => $request->header('Content-Type'),
+            'has_file_method' => $request->hasFile('profileImage') ? 'Yes' : 'No',
+            'has_files_in_request' => count($request->allFiles()) > 0 ? 'Yes' : 'No',
+            'has_files_in_globals' => !empty($_FILES) ? 'Yes ('.implode(', ', array_keys($_FILES)).')' : 'No',
+            'request_keys' => implode(', ', array_keys($request->all())),
+        ]);
+        
+        // Multi-method approach to detect file uploads properly
+        
+        // Method 1: Standard Laravel file detection
+        if ($request->hasFile('profileImage')) {
+            $file = $request->file('profileImage');
+            if ($file && $file->isValid()) {
+                $hasProfileImage = true;
+                \Log::info('File detected with standard Laravel hasFile method', [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType()
+                ]);
+            }
+        }
+        
+        // Method 2: Check if the file exists in request but with different key
+        if (!$hasProfileImage && count($request->allFiles()) > 0) {
+            foreach ($request->allFiles() as $key => $file) {
+                if ($file->isValid()) {
+                    // Copy to profileImage key for consistency
+                    if ($key !== 'profileImage') {
+                        $request->files->set('profileImage', $file);
+                    }
+                    $hasProfileImage = true;
+                    \Log::info('File found in request with different key', [
+                        'original_key' => $key,
+                        'name' => $file->getClientOriginalName()
+                    ]);
+                    break;
+                }
+            }
+        }
+        
+        // Method 3: Check globals if has_profile_image flag is set but file not detected yet
+        if (!$hasProfileImage && $request->has('has_profile_image') && $request->input('has_profile_image') === 'true') {
+            if (!empty($_FILES)) {
+                foreach ($_FILES as $key => $fileData) {
+                    // Check if this is a valid file upload
+                    if (!empty($fileData['tmp_name']) && file_exists($fileData['tmp_name']) && $fileData['error'] === UPLOAD_ERR_OK) {
+                        try {
+                            $uploadedFile = new \Illuminate\Http\UploadedFile(
+                                $fileData['tmp_name'],
+                                $fileData['name'],
+                                $fileData['type'],
+                                $fileData['error'],
+                                true
+                            );
+                            
+                            $request->files->set('profileImage', $uploadedFile);
+                            $hasProfileImage = true;
+                            
+                            \Log::info('File recovered from $_FILES globals', [
+                                'key' => $key,
+                                'name' => $fileData['name'],
+                                'type' => $fileData['type'],
+                                'size' => $fileData['size']
+                            ]);
+                            break;
+                        } catch (\Exception $e) {
+                            \Log::error('Error creating UploadedFile from $_FILES', [
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Jika multipart/form-data dan data kosong, gunakan data user yang ada
+        if (strpos($request->header('Content-Type'), 'multipart/form-data') !== false) {
+            $userData = [
+                'name' => $user->name,
+                'email' => $user->email, 
+                'phoneNumber' => $user->phoneNumber,
+                'storeName' => $user->storeName,
+                'storeAddress' => $user->storeAddress,
+                'kodeQR' => $user->kodeQR,
+            ];
             
-            // Tambahkan file ke request
-            $request->files->set('profileImage', $file);
-            $hasProfileImage = true;
-            \Log::info("ProfileImage detected using global FILES", [
-                'name' => $_FILES['profileImage']['name'],
-                'type' => $_FILES['profileImage']['type'],
-                'size' => $_FILES['profileImage']['size']
+            // Hanya merge jika field yang diperlukan tidak ada dalam request
+            foreach ($userData as $key => $value) {
+                if (empty($request->input($key))) {
+                    $request->merge([$key => $value]);
+                }
+            }
+            
+            \Log::info('Merged existing user data to request for image-only update', [
+                'merged_data' => $userData,
+                'actual_data' => $request->only(array_keys($userData))
             ]);
         }
         
-        // Lakukan validasi data
+        // Validasi data
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
@@ -228,41 +317,76 @@ class UserController extends Controller
             'kodeQR' => 'nullable|string|unique:users,kodeQR,'.$user->id,
         ];
         
-        // Tambahkan validasi file jika ada
         if ($hasProfileImage) {
-            $rules['profileImage'] = 'file|image|max:5120'; // Allow up to 5MB
+            $rules['profileImage'] = 'nullable|file|image|max:5120'; // Max 5MB
         }
         
+        \Log::info('Validating rules', ['rules' => $rules]);
+        
+        // Validasi request
         $validated = $request->validate($rules);
         
-        // Siapkan data untuk update
-        $dataToUpdate = collect($validated)
-            ->except(['profileImage', 'password', 'password_confirmation'])
-            ->toArray();
+        \Log::info('Validation passed', ['validated_fields' => array_keys($validated)]);
         
-        // Handle profile image upload if present
+        // Proses data yang akan diupdate
+        $dataToUpdate = collect($validated)
+            ->except(['profileImage'])
+            ->toArray();        // Upload dan proses file jika ada
         if ($hasProfileImage) {
-            $profileImage = $request->file('profileImage');
-            
             try {
+                $profileImage = $request->file('profileImage');
+                
+                // Validate file once more
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/jpg'];
+                if (!in_array($profileImage->getMimeType(), $allowedTypes)) {
+                    return redirect()->back()->withErrors([
+                        'profileImage' => 'Format file tidak didukung. Gunakan JPG, PNG, GIF, WEBP, atau BMP.'
+                    ])->withInput();
+                }
+                
+                if ($profileImage->getSize() > 5 * 1024 * 1024) {
+                    return redirect()->back()->withErrors([
+                        'profileImage' => 'File terlalu besar. Maksimal 5MB.'
+                    ])->withInput();
+                }
+                
+                // Debug file information
+                \Log::info('Processing profile image', [
+                    'original_name' => $profileImage->getClientOriginalName(),
+                    'mime_type' => $profileImage->getMimeType(),
+                    'size' => $profileImage->getSize() . ' bytes (' . round($profileImage->getSize() / 1024, 2) . ' KB)',
+                    'extension' => $profileImage->getClientOriginalExtension(),
+                    'is_valid' => $profileImage->isValid() ? 'Yes' : 'No'
+                ]);
+                
+                // Generate unique filename
                 $timestamp = time();
                 $random = rand(100000000, 999999999);
-                $filename = "profile_{$timestamp}-{$random}.{$profileImage->getClientOriginalExtension()}";
+                $extension = $profileImage->getClientOriginalExtension() ?: 'jpg';
+                $filename = "profile_{$user->id}_{$timestamp}-{$random}.{$extension}";
                 
-                // Upload ke Firebase Storage
-                $firebaseStorage = new \App\Services\FirebaseStorageService();
-                $storagePath = "profile_images/{$filename}";
-                $url = $firebaseStorage->uploadImage($profileImage->getRealPath(), $storagePath);
-                
-                // Tambahkan URL gambar ke data update
-                $dataToUpdate['profileImagePath'] = $url;
-                
-                \Log::info('Profile image uploaded successfully', [
-                    'url' => $url,
-                    'filename' => $filename
-                ]);
+                // Upload to Firebase Storage
+                try {
+                    $firebaseStorage = new \App\Services\FirebaseStorageService();
+                    $storagePath = "profile_images/{$filename}";
+                    $url = $firebaseStorage->uploadImage($profileImage->getRealPath(), $storagePath);
+                    
+                    // Add image URL to the data to update
+                    $dataToUpdate['profileImagePath'] = $url;
+                    
+                    \Log::info('Profile image uploaded successfully', [
+                        'url' => $url,
+                        'filename' => $filename
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Firebase upload error', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw new \Exception('Gagal mengupload ke Firebase: ' . $e->getMessage());
+                }
             } catch (\Exception $e) {
-                \Log::error('Failed to upload profile image', [
+                \Log::error('Failed to process profile image', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
@@ -403,8 +527,7 @@ class UserController extends Controller
         
         return false;
     }
-    
-    // Add this to your controller to add better logging
+      // Add this to your controller to add better logging
     private function debugUploadInfo(Request $request)
     {
         \Log::info('Request files structure', [
@@ -412,7 +535,30 @@ class UserController extends Controller
             'request_content' => $request->getContent(),
             'has_file_method' => $request->hasFile('profileImage'),
             'input_keys' => array_keys($request->all()),
-            'file_input_content' => $request->input('profileImage')
+            'file_input_content' => $request->input('profileImage'),
+            'request_headers' => [
+                'content_type' => $request->header('Content-Type'),
+                'x_file_upload' => $request->header('X-File-Upload'),
+                'x_requested_with' => $request->header('X-Requested-With')
+            ],
+            'post_vars' => $_POST,
+            'request_method' => $request->method(),
+            'form_flags' => [
+                '_has_image_upload' => $request->has('_has_image_upload') ? $request->input('_has_image_upload') : 'not set',
+                '_is_edit_form' => $request->has('_is_edit_form') ? $request->input('_is_edit_form') : 'not set'
+            ]
         ]);
+    }
+    
+    /**
+     * Helper method to update or keep existing value
+     * 
+     * @param mixed $new Nilai baru dari request
+     * @param mixed $old Nilai lama dari database
+     * @return mixed Nilai baru jika ada, nilai lama jika tidak ada
+     */
+    private function updateOrKeep($new, $old)
+    {
+        return ($new !== null && $new !== '') ? $new : $old;
     }
 }

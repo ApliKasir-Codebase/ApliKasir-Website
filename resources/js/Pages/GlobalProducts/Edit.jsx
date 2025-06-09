@@ -9,91 +9,40 @@ import InputError from '@/Components/InputError';
 import TextArea from '@/Components/TextArea';
 import FlashMessage from '@/Components/FlashMessage';
 
-export default function Create() {
+export default function Edit({ product }) {
     const { errors } = usePage().props;
-    const [previewImage, setPreviewImage] = useState(null);
-    const [verificationStatus, setVerificationStatus] = useState(null);
-    const [verifying, setVerifying] = useState(false);
+    const [previewImage, setPreviewImage] = useState(product.gambar_produk ? `/storage/${product.gambar_produk}` : null);
     
     const { data, setData, post, processing } = useForm({
-        kode_produk: '',
-        nama_produk: '',
-        kategori: '',
-        merek: '',
-        deskripsi: '',
+        _method: 'PATCH',
+        kode_produk: product.kode_produk || '',
+        nama_produk: product.nama_produk || '',
+        kategori: product.kategori || '',
+        merek: product.merek || '',
+        deskripsi: product.deskripsi || '',
         gambar_produk: null,
-        global_product_id: null,
-    });    const handleSubmit = (e) => {
+        is_active: product.is_active,
+        _delete_image: false,
+    });
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('products.store'), {
+        post(route('global-products.update', product.id), {
             forceFormData: true,
         });
     };
     
-    const verifyProductCode = () => {
-        if (!data.kode_produk || data.kode_produk.trim() === '') {
-            setVerificationStatus({
-                status: 'error',
-                message: 'Kode produk tidak boleh kosong'
-            });
-            return;
-        }
-        
-        setVerifying(true);
-        setVerificationStatus(null);
-          // Call the API to verify the product code
-        fetch(route('products.verify-code'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ kode_produk: data.kode_produk }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                setVerificationStatus({
-                    status: 'success',
-                    message: data.message,
-                    product: data.product
-                });
-                
-                // If verification is successful, we can pre-fill some fields
-                if (data.product) {
-                    setData(prevData => ({
-                        ...prevData,
-                        global_product_id: data.product.id,
-                        nama_produk: data.product.nama_produk,
-                        kategori: data.product.kategori || prevData.kategori,
-                        merek: data.product.merek || prevData.merek,
-                    }));
-                }
-            } else {
-                setVerificationStatus({
-                    status: 'error',
-                    message: data.message || 'Kode produk tidak valid'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error verifying product code:', error);
-            setVerificationStatus({
-                status: 'error',
-                message: 'Terjadi kesalahan saat verifikasi kode produk'
-            });
-        })
-        .finally(() => {
-            setVerifying(false);
-        });
-    };
-
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         
+        if (!file) {
+            setData('gambar_produk', null);
+            return;
+        }
+        
         // Validate file type
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (file && !validTypes.includes(file.type)) {
+        if (!validTypes.includes(file.type)) {
             setData('gambar_produk', null);
             const error = {
                 gambar_produk: 'File harus berupa gambar (JPG, PNG, GIF, atau WEBP)'
@@ -103,7 +52,7 @@ export default function Create() {
         }
         
         // Validate file size (max 2MB)
-        if (file && file.size > 2 * 1024 * 1024) {
+        if (file.size > 2 * 1024 * 1024) {
             setData('gambar_produk', null);
             const error = {
                 gambar_produk: 'Ukuran gambar maksimal 2MB'
@@ -114,26 +63,31 @@ export default function Create() {
         
         setData('gambar_produk', file);
         
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewImage(reader.result);
-            };
-            reader.readAsDataURL(file);
-        } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPreviewImage(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+    
+    const handleDeleteImage = () => {
+        if (confirm('Apakah Anda yakin ingin menghapus gambar produk ini?')) {
+            setData('_delete_image', true);
             setPreviewImage(null);
         }
     };
 
     return (
         <div className="min-h-screen bg-white">
-            <Head title="Tambah Produk" />
+            <Head title={`Edit Produk Global - ${product.nama_produk}`} />
             
-            {/* Header */}            <DashboardHeader 
-                pageTitle="Tambah Produk" 
+            {/* Header */}
+            <DashboardHeader 
+                pageTitle="Edit Produk Global" 
                 breadcrumb={[
-                    { label: 'Produk', url: route('products.index') },
-                    { label: 'Tambah Produk' }
+                    { label: 'Produk Global', url: route('global-products.index') },
+                    { label: product.nama_produk, url: route('global-products.show', product.id) },
+                    { label: 'Edit' }
                 ]}
             />
             
@@ -144,49 +98,23 @@ export default function Create() {
                 {/* Konten Utama */}
                 <main className="flex-1 ml-64 p-6 lg:p-8 overflow-y-auto bg-white">
                     <PageTransition>
+                        <FlashMessage />
+
                         <div className="bg-white p-6 rounded-lg shadow-md">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <InputLabel htmlFor="kode_produk" value="Kode Produk" required />
-                                        <div className="flex mt-1">
-                                            <TextInput
-                                                id="kode_produk"
-                                                type="text"
-                                                className="block w-full rounded-r-none"
-                                                value={data.kode_produk}
-                                                onChange={(e) => {
-                                                    setData('kode_produk', e.target.value);
-                                                    setVerificationStatus(null);
-                                                }}
-                                            />
-                                            <button 
-                                                type="button" 
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition-colors duration-300 flex items-center"
-                                                onClick={verifyProductCode}
-                                                disabled={verifying || !data.kode_produk}
-                                            >
-                                                {verifying ? (
-                                                    <span>Memverifikasi...</span>
-                                                ) : (
-                                                    <span>Verifikasi</span>
-                                                )}
-                                            </button>
-                                        </div>
-                                        
-                                        {verificationStatus && (
-                                            <div className={`mt-2 p-2 text-sm rounded-md ${
-                                                verificationStatus.status === 'success' 
-                                                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                                                    : 'bg-red-50 text-red-700 border border-red-200'
-                                            }`}>
-                                                {verificationStatus.message}
-                                            </div>
-                                        )}
-                                        
+                                        <TextInput
+                                            id="kode_produk"
+                                            type="text"
+                                            className="mt-1 block w-full"
+                                            value={data.kode_produk}
+                                            onChange={(e) => setData('kode_produk', e.target.value)}
+                                        />
                                         <InputError message={errors.kode_produk} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Kode produk akan diverifikasi dengan repositori produk global.
+                                            Kode produk harus unik dan digunakan untuk verifikasi produk pengguna.
                                         </p>
                                     </div>
 
@@ -227,6 +155,24 @@ export default function Create() {
                                     </div>
 
                                     <div className="md:col-span-2">
+                                        <InputLabel htmlFor="is_active" value="Status" />
+                                        <div className="mt-2">
+                                            <label className="inline-flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="form-checkbox h-5 w-5 text-blue-600"
+                                                    checked={data.is_active}
+                                                    onChange={(e) => setData('is_active', e.target.checked)}
+                                                />
+                                                <span className="ml-2 text-gray-700">Aktif</span>
+                                            </label>
+                                            <p className="mt-1 text-sm text-gray-500">
+                                                Hanya produk global yang aktif yang dapat digunakan untuk verifikasi produk pengguna.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-2">
                                         <InputLabel htmlFor="deskripsi" value="Deskripsi" />
                                         <TextArea
                                             id="deskripsi"
@@ -239,26 +185,34 @@ export default function Create() {
 
                                     <div className="md:col-span-2">
                                         <InputLabel htmlFor="gambar_produk" value="Gambar Produk" />
+                                        
+                                        {previewImage && !data._delete_image && (
+                                            <div className="mt-2 mb-4">
+                                                <img src={previewImage} alt="Preview" className="max-w-xs h-auto rounded-md" />
+                                                <button 
+                                                    type="button" 
+                                                    onClick={handleDeleteImage}
+                                                    className="mt-2 px-3 py-1 text-sm text-red-600 border border-red-600 rounded-md hover:bg-red-50 transition-colors duration-300"
+                                                >
+                                                    Hapus Gambar
+                                                </button>
+                                            </div>
+                                        )}
+                                        
                                         <input
                                             id="gambar_produk"
                                             type="file"
-                                            className="mt-1 block w-full text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            className="mt-2 block w-full text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                             onChange={handleImageChange}
                                             accept="image/*"
                                         />
                                         <InputError message={errors.gambar_produk} className="mt-2" />
-                                        
-                                        {previewImage && (
-                                            <div className="mt-4">
-                                                <p className="text-sm text-gray-600 mb-2">Preview:</p>
-                                                <img src={previewImage} alt="Preview" className="max-w-xs rounded-md" />
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-end space-x-3">                                    <Link
-                                        href={route('products.index')}
+                                <div className="flex items-center justify-end space-x-3">
+                                    <Link
+                                        href={route('global-products.show', product.id)}
                                         className="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none transition-colors duration-300"
                                     >
                                         Batal
@@ -268,7 +222,7 @@ export default function Create() {
                                         className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300"
                                         disabled={processing}
                                     >
-                                        {processing ? 'Menyimpan...' : 'Simpan'}
+                                        {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                                     </button>
                                 </div>
                             </form>

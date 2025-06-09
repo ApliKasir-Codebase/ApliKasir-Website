@@ -9,8 +9,7 @@ export default function Show({ product }) {
         <div className="min-h-screen bg-white">
             <Head title={`Produk - ${product.nama_produk}`} />
             
-            {/* Header */}
-            <DashboardHeader 
+            {/* Header */}            <DashboardHeader 
                 pageTitle="Detail Produk" 
                 breadcrumb={[
                     { label: 'Produk', url: route('products.index') },

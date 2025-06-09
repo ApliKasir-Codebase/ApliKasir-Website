@@ -2,21 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GlobalProduct;
+use App\Models\Product;
 use App\Services\AdminActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {    /**
      * Display a listing of the products.
+     * For non-admin users, shows only the catalog (global products) and their own products.
+     * For admin users, shows all products with the option to filter by user.
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
         $filter = $request->input('filter');
+        $scope = $request->input('scope', 'all'); // 'all', 'catalog', 'my'
         
-        $query = GlobalProduct::query();
+        $query = Product::query();
+        
+        // Apply scope
+        if ($scope === 'catalog') {
+            $query->catalog(); // Only global catalog products
+        } elseif ($scope === 'my') {
+            $query->ownedBy(auth()->id()); // Only current user's products
+        } else {
+            // For regular users: show only global products and their own
+            if (!auth()->user()->isAdmin) {
+                $query->where(function($q) {
+                    $q->whereNull('user_id')
+                      ->orWhere('user_id', auth()->id());
+                });
+            }
+            // For admin: show all products
+        }
         
         // Apply search if provided
         if ($search) {
@@ -42,8 +63,7 @@ class ProductController extends Controller
         $products = $query->orderBy('nama_produk')
             ->paginate(10)
             ->withQueryString();
-            
-        return Inertia::render('Products/Index', [
+              return Inertia::render('Products/Index', [
             'products' => $products,
             'filters' => [
                 'search' => $search,
@@ -51,52 +71,179 @@ class ProductController extends Controller
             ],
         ]);
     }
-    
-    /**
+      /**
      * Show the form for creating a new product.
+     * For admin users: creates a catalog product (global)
+     * For regular users: creates a user-specific product
      */
     public function create()
     {
-        return Inertia::render('Products/Create');
+        // Load catalog products for reference when creating user products
+        $catalogProducts = [];
+        if (!auth()->user()->isAdmin) {
+            $catalogProducts = Product::catalog()->orderBy('nama_produk')->get();
+        }
+        
+        return Inertia::render('Products/Create', [
+            'catalogProducts' => $catalogProducts
+        ]);
     }
     
     /**
      * Store a newly created product in storage.
-     */    public function store(Request $request)
+     */
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'kode_produk' => 'required|string|max:100|unique:global_products',
-            'nama_produk' => 'required|string|max:255',
-            'kategori' => 'nullable|string|max:255',
-            'merek' => 'nullable|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-          // Handling the image upload
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin;
+        
+        // Different validation rules for admins (catalog products) and users (user products)
+        if ($isAdmin) {
+            // Admin creating a catalog product
+            $validated = $request->validate([
+                'kode_produk' => 'required|string|max:100|unique:products',
+                'nama_produk' => 'required|string|max:255',
+                'kategori' => 'nullable|string|max:255',
+                'merek' => 'nullable|string|max:255',
+                'deskripsi' => 'nullable|string',
+                'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+        } else {
+            // Regular user creating their own product
+            $validated = $request->validate([
+                'kode_produk' => 'nullable|string|max:100',
+                'nama_produk' => 'required|string|max:255',
+                'jumlah_produk' => 'required|integer|min:0',
+                'harga_modal' => 'required|numeric|min:0',
+                'harga_jual' => 'required|numeric|min:0',
+                'catalog_product_id' => 'nullable|exists:products,id', // Optional reference to a catalog product
+                'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+            
+            // Set user_id for user-specific product
+            $validated['user_id'] = $user->id;
+            
+            // If selecting from catalog, copy some details
+            if (!empty($validated['catalog_product_id'])) {
+                $catalogProduct = Product::find($validated['catalog_product_id']);
+                if ($catalogProduct) {
+                    // If no product code provided, generate one based on catalog
+                    if (empty($validated['kode_produk']) && !empty($catalogProduct->kode_produk)) {
+                        $storePrefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $user->storeName), 0, 2));
+                        if (empty($storePrefix)) $storePrefix = 'ST';
+                        $validated['kode_produk'] = $storePrefix . '-' . $catalogProduct->kode_produk;
+                    }
+                    
+                    // Copy image if not uploading a new one
+                    if (!$request->hasFile('gambar_produk') && !empty($catalogProduct->gambar_produk)) {
+                        $validated['gambar_produk'] = $catalogProduct->gambar_produk;
+                    }
+                }
+                
+                // Remove catalog_product_id from validated data (not in database)
+                unset($validated['catalog_product_id']);
+            }
+        }
+        
+        // Handling the image upload
         if ($request->hasFile('gambar_produk')) {
             try {
-                // Simpan gambar dengan permission yang benar
+                // Save image with correct permissions
                 $file = $request->file('gambar_produk');
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $imagePath = $file->storeAs('global-products', $fileName, 'public');
+                $folderName = $isAdmin ? 'catalog-products' : 'user-products';
+                $imagePath = $file->storeAs($folderName, $fileName, 'public');
                 
-                // Pastikan visibility publik
-                \Storage::disk('public')->setVisibility($imagePath, 'public');
+                // Ensure public visibility
+                Storage::disk('public')->setVisibility($imagePath, 'public');
                 
                 $validated['gambar_produk'] = $imagePath;
             } catch (\Exception $e) {
                 // Log error
-                \Log::error('Error uploading product image: ' . $e->getMessage());
+                Log::error('Error uploading product image: ' . $e->getMessage());
+            }
+        }
+          $product = Product::create($validated);
+        
+        if (auth()->user()->isAdmin) {
+            // Log admin activity for catalog products
+            AdminActivityLogger::log(
+                'products', 
+                'created',
+                "Membuat produk katalog baru: {$product->nama_produk}",
+                [
+                    'product_id' => $product->id,
+                    'kode_produk' => $product->kode_produk,
+                    'kategori' => $product->kategori ?? null,
+                    'merek' => $product->merek ?? null
+                ]
+            );
+        }
+          
+        return redirect()->route('products.index')
+            ->with('success', 'Produk berhasil ditambahkan');
+    }
+      /**
+     * Display the specified product.
+     */
+    public function show(Product $product)
+    {        // Load transactions that reference this product
+        $product->load('transactions');        return Inertia::render('Products/Show', [
+            'product' => $product,
+        ]);
+    }
+      /**
+     * Show the form for editing the specified product.
+     */
+    public function edit(Product $product)
+    {        return Inertia::render('Products/Edit', [
+            'product' => $product,
+        ]);
+    }
+      /**
+     * Update the specified product in storage.
+     */
+    public function update(Request $request, Product $product)
+    {
+        // Validate request
+        $validatedData = $request->validate([
+            'kode_produk' => 'required|string|max:100|unique:products,kode_produk,' . $product->id,
+            'nama_produk' => 'required|string|max:255',
+            'kategori' => 'nullable|string|max:255',
+            'merek' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'is_active' => 'sometimes|boolean',
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        
+        // Handle image upload
+        if ($request->hasFile('gambar_produk')) {
+            try {                // Delete old image if exists
+                if ($product->gambar_produk) {
+                    Storage::disk('public')->delete($product->gambar_produk);
+                }
+                
+                // Save new image
+                $file = $request->file('gambar_produk');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $imagePath = $file->storeAs('global-products', $fileName, 'public');
+                  // Ensure public visibility
+                Storage::disk('public')->setVisibility($imagePath, 'public');
+                
+                $validatedData['gambar_produk'] = $imagePath;
+            } catch (\Exception $e) {
+                Log::error('Error uploading product image: ' . $e->getMessage());
             }
         }
         
-        $product = GlobalProduct::create($validated);
+        // Update the product
+        $product->update($validatedData);
         
         // Log admin activity
         AdminActivityLogger::log(
             'products', 
-            'created',
-            "Membuat produk baru: {$product->nama_produk}",
+            'updated',
+            "Memperbarui produk: {$product->nama_produk}",
             [
                 'product_id' => $product->id,
                 'kode_produk' => $product->kode_produk,
@@ -104,262 +251,66 @@ class ProductController extends Controller
                 'merek' => $product->merek
             ]
         );
-        
-        return redirect()->route('products.index')
-            ->with('success', 'Produk berhasil ditambahkan');
+          return redirect()->route('products.index')
+            ->with('success', 'Produk berhasil diperbarui');
     }
-    
-    /**
-     * Display the specified product.
-     */
-    public function show(GlobalProduct $product)
-    {
-        // Eager load the user products that are based on this global product
-        $product->load('userProducts');
-        
-        return Inertia::render('Products/Show', [
-            'product' => $product,
-        ]);
-    }
-    
-    /**
-     * Show the form for editing the specified product.
-     */
-    public function edit(GlobalProduct $product)
-    {
-        return Inertia::render('Products/Edit', [
-            'product' => $product,
-        ]);
-    }    /**
-     * Update the specified product in storage.
-     */    public function update(Request $request, GlobalProduct $product)
-    {
-        // Log data yang diterima untuk debugging
-        \Log::info('Update Product Request RAW data:', $request->all());
-        \Log::info('Current product data:', $product->toArray());
-        
-        // Periksa flag perubahan yang dikirim dari frontend
-        // Gunakan kedua format flag untuk memastikan backward compatibility
-        $isKodeChanged = $request->input('_kode_changed') === '1' || 
-                         $request->input('_changed_kode_produk') === '1' || 
-                         $request->input('kode_produk_changed') === 'YES';
-                         
-        $isNamaChanged = $request->input('_nama_changed') === '1' || 
-                          $request->input('_changed_nama_produk') === '1' || 
-                          $request->input('nama_produk_changed') === 'YES';
-        
-        // Periksa juga apakah nilai field sebenarnya berbeda dari nilai di database
-        // Ini sebagai failsafe jika flag tidak dikirim dengan benar
-        if (!$isKodeChanged && $request->filled('kode_produk') && 
-            $request->input('kode_produk') !== $product->kode_produk) {
-            $isKodeChanged = true;
-            \Log::info('Kode produk terdeteksi berubah berdasarkan nilai baru vs database');
-        }
-        
-        if (!$isNamaChanged && $request->filled('nama_produk') && 
-            $request->input('nama_produk') !== $product->nama_produk) {
-            $isNamaChanged = true;
-            \Log::info('Nama produk terdeteksi berubah berdasarkan nilai baru vs database');
-        }
-        
-        \Log::info('Field change status:', [
-            'kode_produk_changed' => $isKodeChanged ? 'YES' : 'NO',
-            'nama_produk_changed' => $isNamaChanged ? 'YES' : 'NO',
-            'kode_sent' => $request->input('kode_produk'),
-            'nama_sent' => $request->input('nama_produk')
-        ]);
-        
-        // Siapkan data untuk validasi
-        $dataToValidate = $request->all();
-        $rules = [];
-        
-        // Tambahkan aturan validasi berdasarkan kebutuhan
-        if ($isKodeChanged) {
-            $rules['kode_produk'] = 'required|string|max:100|unique:global_products,kode_produk,'.$product->id;
-            \Log::info('Will validate and update kode_produk:', ['value' => $dataToValidate['kode_produk']]);
-        }
-        
-        if ($isNamaChanged) {
-            $rules['nama_produk'] = 'required|string|max:255';
-            \Log::info('Will validate and update nama_produk:', ['value' => $dataToValidate['nama_produk']]);
-        }
-        
-        // Validasi field lainnya
-        $rules['kategori'] = 'nullable|string|max:255';
-        $rules['merek'] = 'nullable|string|max:255';
-        $rules['deskripsi'] = 'nullable|string';
-        $rules['is_active'] = 'sometimes|nullable';
-          // Hanya validasi gambar jika ada file yang diunggah
-        if ($request->hasFile('gambar_produk')) {
-            // Support lebih banyak format gambar
-            $rules['gambar_produk'] = 'image|mimes:jpeg,png,jpg,gif,webp,svg,bmp|max:2048';
-            \Log::info('Gambar produk diunggah:', [
-                'name' => $request->file('gambar_produk')->getClientOriginalName(),
-                'type' => $request->file('gambar_produk')->getMimeType(),
-                'size' => $request->file('gambar_produk')->getSize()
-            ]);
-        }try {
-            // Validasi data
-            $validator = \Illuminate\Support\Facades\Validator::make($dataToValidate, $rules);
-            
-            if ($validator->fails()) {
-                \Log::error('Validation failed:', ['errors' => $validator->errors()]);
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput();
-            }
-            
-            $validated = $validator->validated();
-            \Log::info('Validation passed:', $validated);
-              // Siapkan data untuk update
-            $dataToUpdate = [];
-            
-            // PENTING: Hanya perbarui field yang benar-benar perlu diperbarui
-            // Kode_produk dan nama_produk hanya diperbarui jika flag menunjukkan TRUE
-            // atau jika nilai sebenarnya berbeda
-            if ($isKodeChanged) {
-                $dataToUpdate['kode_produk'] = $request->input('kode_produk');
-                \Log::info('WILL UPDATE kode_produk to:', ['new_value' => $request->input('kode_produk')]);
-            }
-            
-            if ($isNamaChanged) {
-                $dataToUpdate['nama_produk'] = $request->input('nama_produk');
-                \Log::info('WILL UPDATE nama_produk to:', ['new_value' => $request->input('nama_produk')]);
-            }
-            
-            // Field lain selalu diupdate jika ada
-            if ($request->has('kategori')) {
-                $dataToUpdate['kategori'] = $request->input('kategori');
-            }
-            
-            if ($request->has('merek')) {
-                $dataToUpdate['merek'] = $request->input('merek');
-            }
-            
-            if ($request->has('deskripsi')) {
-                $dataToUpdate['deskripsi'] = $request->input('deskripsi');
-            }
-            
-            // Pastikan is_active selalu boolean
-            if ($request->has('is_active')) {
-                $dataToUpdate['is_active'] = filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN);
-                \Log::info('Set is_active to:', ['value' => $dataToUpdate['is_active']]);
-            }
-            
-            // VERIFIKASI: Lakukan double-check apakah data akan berubah
-            \Log::info('ORIGINAL DATA vs NEW DATA:', [
-                'kode_produk' => [
-                    'original' => $product->kode_produk,
-                    'new' => $isKodeChanged ? $request->input('kode_produk') : $product->kode_produk,
-                    'will_change' => $isKodeChanged
-                ],
-                'nama_produk' => [
-                    'original' => $product->nama_produk,
-                    'new' => $isNamaChanged ? $request->input('nama_produk') : $product->nama_produk,
-                    'will_change' => $isNamaChanged
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Error during validation:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat validasi: ' . $e->getMessage())
-                ->withInput();
-        }// Handling the image upload
-        if ($request->hasFile('gambar_produk')) {
-            try {
-                // Hapus gambar lama jika ada
-                if ($product->gambar_produk) {
-                    \Log::info('Deleting old image:', ['path' => $product->gambar_produk]);
-                    \Storage::disk('public')->delete($product->gambar_produk);
-                }
-                
-                // Simpan gambar baru dengan permission yang benar
-                $file = $request->file('gambar_produk');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $imagePath = $file->storeAs('global-products', $fileName, 'public');
-                
-                // Pastikan visibility publik
-                \Storage::disk('public')->setVisibility($imagePath, 'public');
-                
-                \Log::info('New image saved:', ['path' => $imagePath]);
-                $dataToUpdate['gambar_produk'] = $imagePath;
-            } catch (\Exception $e) {
-                // Log error
-                \Log::error('Error uploading product image: ' . $e->getMessage());
-            }
-        }
-        
-        \Log::info('Final data to update:', $dataToUpdate);
-          try {
-            // Update produk dengan data yang telah disiapkan
-            $product->update($dataToUpdate);
-            \Log::info('Product updated successfully:', [
-                'id' => $product->id,
-                'updated_fields' => array_keys($dataToUpdate)
-            ]);
-            
-            // Log admin activity if there were changes
-            if (!empty($dataToUpdate)) {
-                AdminActivityLogger::log(
-                    'products', 
-                    'updated',
-                    "Mengubah produk: {$product->nama_produk}",
-                    [
-                        'product_id' => $product->id,
-                        'kode_produk' => $product->kode_produk,
-                        'updated_fields' => array_keys($dataToUpdate),
-                        'changes' => $dataToUpdate
-                    ]
-                );
-            }
-            
-            return redirect()->route('products.index')
-                ->with('success', 'Produk berhasil diperbarui');
-        } catch (\Exception $e) {
-            \Log::error('Error updating product:', [
-                'id' => $product->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return redirect()->route('products.edit', $product->id)
-                ->with('error', 'Gagal memperbarui produk: ' . $e->getMessage());
-        }
-    }
-    
-    /**
+      /**
      * Remove the specified product from storage.
-     */    public function destroy(GlobalProduct $product)
-    {
-        // Check if product is used by any user products
-        if ($product->userProducts()->count() > 0) {
-            return redirect()->route('products.index')
-                ->with('error', 'Produk tidak dapat dihapus karena sedang digunakan oleh pengguna');
-        }
-        
+     */
+    public function destroy(Product $product)
+    {        // Store product info for logs before deletion
         $productInfo = [
             'id' => $product->id,
-            'kode_produk' => $product->kode_produk,
-            'nama_produk' => $product->nama_produk,
-            'kategori' => $product->kategori,
-            'merek' => $product->merek
+            'nama' => $product->nama_produk,
+            'kode' => $product->kode_produk
         ];
         
+        // Delete image if exists
+        if ($product->gambar_produk) {
+            Storage::disk('public')->delete($product->gambar_produk);
+        }
+        
+        // Delete the product
         $product->delete();
         
         // Log admin activity
         AdminActivityLogger::log(
             'products', 
             'deleted',
-            "Menghapus produk: {$productInfo['nama_produk']}",
-            $productInfo
+            "Menghapus produk: {$productInfo['nama']}",
+            [
+                'product_id' => $productInfo['id'],
+                'kode_produk' => $productInfo['kode']
+            ]
         );
-        
-        return redirect()->route('products.index')
+          return redirect()->route('products.index')
             ->with('success', 'Produk berhasil dihapus');
+    }
+    
+    /**
+     * Verify a product code against global products
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyProductCode(Request $request)
+    {
+        $request->validate([
+            'kode_produk' => 'required|string|max:100',
+        ]);
+          $kodeProduct = $request->input('kode_produk');
+        $product = Product::verifyProductCode($kodeProduct);
+          if ($product) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kode produk valid dan terverifikasi',
+                'product' => $product
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Kode produk tidak valid atau tidak aktif'
+        ]);
     }
 }

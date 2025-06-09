@@ -46,31 +46,35 @@ export default function Edit({ user, auth, qrCodeDataUri }) {
             kodeQR: user.kodeQR || '',
         });
     }, [user]);
-    
-    const handleSubmit = (e) => {
+      const handleSubmit = (e) => {
         e.preventDefault();
         
         // Create FormData object
         const formData = new FormData();
         
-        // Add text fields
-        formData.append('name', data.name || '');
-        formData.append('email', data.email || '');
-        formData.append('phoneNumber', data.phoneNumber || '');
-        formData.append('storeName', data.storeName || '');
-        formData.append('storeAddress', data.storeAddress || '');
-        formData.append('kodeQR', data.kodeQR || '');
+        // Selalu sertakan semua field yang ada dengan data yang sudah ada
+        formData.append('name', data.name || user.name || '');
+        formData.append('email', data.email || user.email || '');
+        formData.append('phoneNumber', data.phoneNumber || user.phoneNumber || '');
+        formData.append('storeName', data.storeName || user.storeName || '');
+        formData.append('storeAddress', data.storeAddress || user.storeAddress || '');
+        formData.append('kodeQR', data.kodeQR || user.kodeQR || '');
         
-        // Debug flag
-        formData.append('_debug_form_submission', 'true');
+        // Tambahkan flag untuk memudahkan deteksi
+        formData.append('_is_edit_form', 'true');
         
-        // Add profile image if selected
+        // Add profile image if selected with explicit flag
         if (data.profileImage) {
+            // CRITICAL: This flag must be set to 'true' for proper image detection
+            formData.append('has_profile_image', 'true');
+            
             console.log('Adding profile image to form:', {
                 name: data.profileImage.name,
                 type: data.profileImage.type,
-                size: data.profileImage.size
+                size: Math.round(data.profileImage.size / 1024) + 'KB'
             });
+            
+            // IMPORTANT: Append the file with the exact fieldname expected by the backend
             formData.append('profileImage', data.profileImage);
         }
         
@@ -84,17 +88,34 @@ export default function Edit({ user, auth, qrCodeDataUri }) {
         put(route('users.update', user.id), formData, {
             forceFormData: true,
             preserveScroll: true,
-            preserveState: false,
+            preserveState: true, 
             resetOnSuccess: false,
+            onBefore: () => {
+                console.log('Form data being submitted:', 
+                    Array.from(formData.entries())
+                    .map(pair => pair[0] === 'profileImage' ? 
+                        ['profileImage', '[FILE]'] : pair)
+                );
+            },
             headers: {
                 'X-File-Upload': data.profileImage ? 'true' : 'false',
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                // Adding additional header to ensure server recognizes the request
+                'X-Has-Image': data.profileImage ? 'true' : 'false'
             },
             onSuccess: (page) => {
                 console.log('Success: User updated!');
-                // Optional: Show a success message
-                alert('Pengguna berhasil diperbarui');
+                
+                // Refresh page if image was uploaded to show new image
+                if (data.profileImage) {
+                    window.location.reload();
+                }
+                
+                // Gunakan flash message dari page props daripada alert
+                if (!page.props.flash?.success) {
+                    alert('Pengguna berhasil diperbarui');
+                }
             },
             onError: (errors) => {
                 console.error('Error updating user:', errors);
@@ -103,9 +124,7 @@ export default function Edit({ user, auth, qrCodeDataUri }) {
                 console.log('Form submission completed');
             }
         });
-    };
-
-    // File input handling
+    };    // File input handling
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         
@@ -135,10 +154,12 @@ export default function Edit({ user, auth, qrCodeDataUri }) {
             };
             reader.readAsDataURL(file);
             
+            // Enhanced logging for debugging
             console.log('File selected successfully:', {
                 name: file.name,
-                size: file.size,
-                type: file.type
+                size: Math.round(file.size / 1024) + 'KB',
+                type: file.type,
+                lastModified: new Date(file.lastModified).toISOString()
             });
         }
     };

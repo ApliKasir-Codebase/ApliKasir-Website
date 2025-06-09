@@ -48,44 +48,73 @@ class FirebaseStorageService
      * @param string $storagePath Path di Firebase Storage (folder/filename.ext)
      * @param string|null $mimeType MIME type file (opsional, akan dideteksi jika tidak diberikan)
      * @return string URL publik dari file yang diupload
-     */    public function uploadImage($fileContent, $storagePath, $mimeType = null)
+     */    /**
+     * Upload an image file to Firebase Storage
+     *
+     * @param string|resource $fileContent File path or binary content
+     * @param string $storagePath Storage path including filename
+     * @param string|null $mimeType Optional MIME type
+     * @return string Public URL of the uploaded file
+     * @throws \Exception
+     */
+    public function uploadImage($fileContent, $storagePath, $mimeType = null)
     {
         try {
-            // Tentukan apakah input adalah path file atau konten binary
+            // Check if input is a file path or binary content
             $isFilePath = is_string($fileContent) && file_exists($fileContent);
             
-            \Log::info("Uploading image to Firebase Storage", [
+            // More detailed logging for debugging
+            \Log::info("Starting image upload to Firebase Storage", [
                 'storagePath' => $storagePath,
                 'isFilePath' => $isFilePath ? 'Yes' : 'No',
-                'fileExists' => $isFilePath ? 'Yes' : 'No',
                 'content_type' => gettype($fileContent),
-                'content_length' => is_string($fileContent) ? strlen($fileContent) : 'N/A',
-                'mime_type' => $mimeType,
+                'mime_type_provided' => $mimeType ?? 'Not provided',
                 'memory_limit' => ini_get('memory_limit')
             ]);
             
-            // Baca file sebagai binary jika input adalah path file
+            // Read file content if input is a file path
             if ($isFilePath) {
                 try {
-                    // Gunakan file_get_contents langsung daripada Facade untuk menghindari masalah
-                    $content = file_get_contents($fileContent);
-                    $detectedMimeType = $mimeType ?? mime_content_type($fileContent);
-                    \Log::debug("Reading file from path: {$fileContent}, MIME: {$detectedMimeType}, Size: " . strlen($content) . " bytes");
-                } catch (\Exception $e) {
-                    \Log::error("Failed to read file from path: {$fileContent}", [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                    // Check file details before reading
+                    $fileSize = filesize($fileContent);
+                    $filePerms = substr(sprintf('%o', fileperms($fileContent)), -4);
+                    
+                    \Log::debug("File details before reading", [
+                        'path' => $fileContent,
+                        'size' => $fileSize . ' bytes',
+                        'permissions' => $filePerms,
+                        'readable' => is_readable($fileContent) ? 'Yes' : 'No'
                     ]);
                     
-                    // Mencoba fallback dengan fopen
-                    \Log::info("Attempting fallback file read with fopen/stream_get_contents");
+                    // Attempt to read with file_get_contents first
+                    $content = file_get_contents($fileContent);
+                    if ($content === false) {
+                        throw new \Exception("file_get_contents failed to read the file");
+                    }
+                    
+                    $detectedMimeType = $mimeType ?? mime_content_type($fileContent);
+                    \Log::debug("File read successfully", [
+                        'method' => 'file_get_contents',
+                        'mime' => $detectedMimeType,
+                        'size' => strlen($content) . ' bytes'
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning("Failed to read file with file_get_contents", [
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Try alternative method with fopen/stream_get_contents
+                    \Log::info("Attempting fallback with fopen/stream_get_contents");
                     try {
-                        $handle = fopen($fileContent, 'r');
+                        $handle = fopen($fileContent, 'rb'); // Binary mode for images
                         if ($handle) {
                             $content = stream_get_contents($handle);
                             fclose($handle);
                             $detectedMimeType = $mimeType ?? 'image/jpeg';
-                            \Log::debug("Successfully read file with stream_get_contents fallback: Size: " . strlen($content) . " bytes");
+                            \Log::debug("File read successfully with fallback method", [
+                                'method' => 'stream_get_contents',
+                                'size' => strlen($content) . ' bytes'
+                            ]);
                         } else {
                             throw new \Exception("Failed to open file with fopen");
                         }

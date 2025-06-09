@@ -5,6 +5,10 @@ import ServicesSection from './ServicesSection';
 import FooterSection from './FooterSection';
 import HeroSection from './HeroSection';
 import AnimationObserver from './IntersectionObserverHandler';
+import StatsSection from './StatsSection';
+import TestimonialsSection from './TestimonialsSection';
+import FAQSection from './FAQSection.jsx';
+import CTASection from './CTASection';
 
 export {
     HeroSection,
@@ -13,5 +17,9 @@ export {
     PreviewSection,
     ServicesSection,
     FooterSection,
-    AnimationObserver
+    AnimationObserver,
+    StatsSection,
+    TestimonialsSection,
+    FAQSection,
+    CTASection
 };

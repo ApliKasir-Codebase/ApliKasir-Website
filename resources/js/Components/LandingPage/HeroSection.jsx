@@ -4,7 +4,7 @@ import './IconAnimations.css';
 import './SectionAnimations.css';
 
 // Hero Section Component with geometric elements and subtle shadows
-const HeroSection = () => {
+const HeroSection = ({ availableVersions = [] }) => {
     // Definisikan keyframes dan animasi langsung dalam inline style
     const animationStyles = {
         '@keyframes floatAnim': {
@@ -15,6 +15,24 @@ const HeroSection = () => {
             '0%, 100%': { transform: 'scale(1)' },
             '50%': { transform: 'scale(1.1)' }
         }
+    };
+
+    // Function to format file size
+    const formatFileSize = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // Function to format date
+    const formatDate = (timestamp) => {
+        return new Date(timestamp * 1000).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
     
     // Style untuk animasi ikon
@@ -77,13 +95,57 @@ const HeroSection = () => {
                         Memulai hal kecil dalam membantu mengelola pendapatan dan pengeluaran usahamu agar lebih
                         mudah, praktis dan terjaga. Untuk langkah yang lebih cerah
                     </p>
-                    <Link
-                        href="/login"
-                        className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-1 animate-fade-in-up-delay-2"
-                    >
-                        Jelajahi Aplikasi
-                    </Link>
-                </div>                <div className="md:w-1/2 lg:w-2/5 flex flex-col items-center justify-center z-10">                    {/* Main image dengan ikon menyebar di sekitarnya */}                    <div className="relative w-[400px] h-[400px] md:w-[450px] md:h-[450px] flex items-center justify-center mb-4">
+                      {/* Download Section */}
+                    <div className="space-y-4 animate-fade-in-up-delay-2">
+                        <div className="space-y-3">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-4">Download Aplikasi Mobile</h3>
+                            {availableVersions.length > 0 ? (
+                                <a
+                                    href={availableVersions[0].download_url}
+                                    className="inline-flex items-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                    download
+                                >
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+                                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5703.416.416 0 00-.5703.1518l-2.0223 3.503C15.5484 8.6845 13.8273 8.3516 12 8.3516s-3.5484.3329-5.1851.7987L4.7926 5.6473a.4161.4161 0 00-.5703-.1518.416.416 0 00-.1518.5703l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3435-4.1021-2.6892-7.5743-6.1185-9.4396"/>
+                                        </svg>
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold">Download Aplikasi Android</div>
+                                        <div className="text-sm text-green-100 font-normal">
+                                            {availableVersions[0] ? `${formatFileSize(availableVersions[0].size)} • ${formatDate(availableVersions[0].last_modified)}` : 'Aplikasir Mobile'}
+                                        </div>
+                                    </div>
+                                    <svg className="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </a>
+                            ) : (
+                                <a
+                                    href="#"
+                                    className="inline-flex items-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        alert('File APK sedang disiapkan. Silakan coba lagi nanti.');
+                                    }}
+                                >
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+                                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5703.416.416 0 00-.5703.1518l-2.0223 3.503C15.5484 8.6845 13.8273 8.3516 12 8.3516s-3.5484.3329-5.1851.7987L4.7926 5.6473a.4161.4161 0 00-.5703-.1518.416.416 0 00-.1518.5703l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3435-4.1021-2.6892-7.5743-6.1185-9.4396"/>
+                                        </svg>
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-bold">Download Aplikasi Android</div>
+                                        <div className="text-sm text-green-100 font-normal">Aplikasir Mobile</div>
+                                    </div>
+                                    <svg className="w-5 h-5 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div><div className="md:w-1/2 lg:w-2/5 flex flex-col items-center justify-center z-10">                    {/* Main image dengan ikon menyebar di sekitarnya */}                    <div className="relative w-[400px] h-[400px] md:w-[450px] md:h-[450px] flex items-center justify-center mb-4">
                         {/* Main image (central) */}
                         <div className="bg-blue-500 rounded-full w-[280px] h-[280px] md:w-[320px] md:h-[320px] flex items-center justify-center shadow-xl z-10 animate-blob">
                             <img 

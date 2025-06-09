@@ -4,20 +4,54 @@ import { Link } from '@inertiajs/react';
 const FooterSection = () => {
     const currentYear = new Date().getFullYear();
     
-    return (
-        <footer className="bg-gray-50 border-t border-gray-200">
+    return (        <footer className="bg-gray-50 border-t border-gray-200">
             <div className="container mx-auto px-6 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">                    {/* Column 1: Logo dan Deskripsi */}
-                    <div className="lg:col-span-1">
+                {/* Main Footer Grid - Enhanced layout with maps */}
+                <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 mb-12">
+                    {/* Aplikasir Column dengan Kontak - Takes 2 columns on lg screens */}
+                    <div className="lg:col-span-2" id="kontak">
                         <div className="flex items-center mb-6">
                             <img src="/images/logo-aplikasir.svg" alt="ApliKasir Logo" className="h-8 w-auto mr-2" />
                             <h2 className="text-2xl font-bold text-blue-600">
-                                ApliKasir
+                                Aplikasir
                             </h2>
                         </div>
                         <p className="text-gray-600 mb-6">
                             Aplikasi point of sale modern untuk mengelola transaksi bisnis Anda dengan mudah dan efisien.
                         </p>
+                        
+                        {/* Kontak Info */}
+                        <div className="mb-6">
+                            <ul className="space-y-3">
+                                <li className="flex items-start">
+                                    <svg className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span className="text-gray-600 text-sm">
+                                        Jl. Telekomunikasi 1, Bandung, Jawa Barat
+                                    </span>
+                                </li>
+                                <li className="flex items-center">
+                                    <svg className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                    <span className="text-gray-600 text-sm">
+                                        <a href="tel:+628696969696" className="hover:text-blue-600 transition-colors">08696969696</a>
+                                    </span>
+                                </li>
+                                <li className="flex items-center">
+                                    <svg className="h-5 w-5 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-gray-600 text-sm">
+                                        <a href="mailto:info@aplikasir.com" className="hover:text-blue-600 transition-colors">info@aplikasir.com</a>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        {/* Social Media */}
                         <div className="flex space-x-4">
                             <a href="https://twitter.com/aplikasir" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-500 transition-colors" aria-label="Twitter">
                                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -43,82 +77,168 @@ const FooterSection = () => {
                         </div>
                     </div>
                     
-                    {/* Column 2: Navigasi */}
+                    {/* Download Aplikasi */}
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Navigasi</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Download Aplikasi</h3>
+                        <div className="space-y-3">
+                            <a 
+                                href="#beranda" 
+                                className="flex items-center text-gray-600 hover:text-blue-600 transition-colors group"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('beranda')?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                            >
+                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors">
+                                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5703.416.416 0 00-.5703.1518l-2.0223 3.503C15.5484 8.6845 13.8273 8.3516 12 8.3516s-3.5484.3329-5.1851.7987L4.7926 5.6473a.4161.4161 0 00-.5703-.1518.416.416 0 00-.1518.5703l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3435-4.1021-2.6892-7.5743-6.1185-9.4396"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div className="font-medium">Android APK</div>
+                                    <div className="text-xs text-gray-500">Download untuk Android</div>
+                                </div>
+                            </a>
+                            
+                            <a 
+                                href="#beranda" 
+                                className="flex items-center text-gray-600 hover:text-blue-600 transition-colors group"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('beranda')?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                            >
+                            </a>
+                        </div>
+                    </div>                    {/* Layanan */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Fitur Aplikasi</h3>
                         <ul className="space-y-3">
                             <li>
-                                <a href="#beranda" className="text-gray-600 hover:text-blue-600 transition-colors">Beranda</a>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Manajemen Produk</a>
                             </li>
                             <li>
-                                <a href="#tentang" className="text-gray-600 hover:text-blue-600 transition-colors">Tentang</a>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Kasir Digital</a>
                             </li>
                             <li>
-                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors">Layanan</a>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Catatan Kredit</a>
                             </li>
                             <li>
-                                <a href="#kontak" className="text-gray-600 hover:text-blue-600 transition-colors">Kontak</a>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Pemindaian Produk</a>
+                            </li>
+                            <li>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Data Pelanggan</a>
+                            </li>
+                            <li>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Laporan Real-time</a>
+                            </li>
+                            <li>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Sinkronisasi Cloud</a>
+                            </li>
+                            <li>
+                                <a href="#layanan" className="text-gray-600 hover:text-blue-600 transition-colors" onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById('layanan')?.scrollIntoView({ behavior: 'smooth' });
+                                }}>Keamanan Terjamin</a>
+                            </li>
+                        </ul>
+                    </div>
+                      {/* Dukungan */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Dukungan</h3>
+                        <ul className="space-y-3">
+                            <li>
+                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Pusat Bantuan</a>
+                            </li>
+                            <li>
+                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Tutorial</a>
+                            </li>
+                            <li>
+                                <a href="https://wa.me/628696969696" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-blue-600 transition-colors">Live Chat</a>
+                            </li>
+                            <li>
+                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Lapor Bug</a>
                             </li>
                         </ul>
                     </div>
                     
-                    {/* Column 3: Layanan */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Layanan</h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Manajemen Produk</a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Transaksi</a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Catatan Kredit</a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Laporan</a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Pemindaian Produk</a>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    {/* Column 4: Kontak */}
-                    <div id="kontak">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Kontak</h3>
-                        <ul className="space-y-3">
-                            <li className="flex items-start">
-                                <svg className="h-6 w-6 text-blue-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span className="text-gray-600">
-                                    Jl. Telekomunikasi 1, Terusan Buahbatu Kabupaten Bandung, Jawa Barat 40257
-                                </span>
-                            </li>
-                            <li className="flex items-center">
-                                <svg className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
-                                <span className="text-gray-600">
-                                    <a href="tel:+628696969696" className="hover:text-blue-600 transition-colors">08696969696</a>
-                                </span>
-                            </li>
-                            <li className="flex items-center">
-                                <svg className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span className="text-gray-600">
-                                    <a href="mailto:info@aplikasir.com" className="hover:text-blue-600 transition-colors">info@aplikasir.com</a>
-                                </span>
-                            </li>
-                        </ul>
+                    {/* Lokasi & Peta - Takes 2 columns on lg screens */}
+                    <div className="lg:col-span-2">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Lokasi Kami</h3>
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Map Container */}
+                            <div className="h-48 bg-gray-100 relative">
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.7979052828393!2d107.62793731477285!3d-6.913054195018815!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68e9adf177bf8d%3A0x437398556f9fa03!2sTelkom%20University!5e0!3m2!1sen!2sid!4v1635789123456!5m2!1sen!2sid"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    allowFullScreen=""
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    title="Lokasi Aplikasir"
+                                    className="absolute inset-0"
+                                ></iframe>
+                                {/* Overlay for better UX on mobile */}
+                                <div className="absolute inset-0 bg-transparent hover:bg-black hover:bg-opacity-10 transition-all duration-200 cursor-pointer" 
+                                     onClick={() => window.open('https://maps.google.com/maps?q=Telkom+University+Bandung', '_blank')}
+                                     title="Buka di Google Maps">
+                                </div>
+                            </div>
+                            
+                            {/* Map Info */}
+                            <div className="p-4">
+                                <div className="flex items-start space-x-3">
+                                    <svg className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800">Aplikasir Office</p>
+                                        <p className="text-xs text-gray-600 mt-1">Jl. Telekomunikasi 1, Bandung<br />Jawa Barat 40257</p>
+                                        <div className="mt-2 flex space-x-2">
+                                            <a 
+                                                href="https://maps.google.com/maps?q=Telkom+University+Bandung" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                            >
+                                                <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                                Lihat di Maps
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                   {/* Copyright */}
                 <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-gray-600 text-sm">© {currentYear} ApliKasir. All rights reserved.</p>
+                    <p className="text-gray-600 text-sm">© {currentYear} Aplikasir. All rights reserved.</p>
                     
                     <div className="mt-4 md:mt-0">
                         <ul className="flex space-x-6">

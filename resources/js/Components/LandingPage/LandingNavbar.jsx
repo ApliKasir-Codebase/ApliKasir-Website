@@ -16,9 +16,8 @@ const LandingNavbar = ({ canLogin }) => {
             } else {
                 setIsScrolled(false);
             }
-            
-            // Update active section based on scroll position
-            const sections = ['beranda', 'tentang', 'layanan', 'kontak'];
+              // Update active section based on scroll position
+            const sections = ['beranda', 'tentang', 'preview', 'layanan', 'faq', 'kontak'];
             for (const section of sections) {
                 const element = document.getElementById(section);
                 if (element) {
@@ -48,11 +47,12 @@ const LandingNavbar = ({ canLogin }) => {
         const targetId = e.currentTarget.getAttribute('href').substring(1);
         const targetElement = document.getElementById(targetId);
         
-        // Smooth scroll to the target section
+        // Smooth scroll to the target section with enhanced animation
         if (targetElement) {
-            const navbarHeight = 70; // Approximate navbar height
+            const navbarHeight = 80; // Navbar height including padding
             const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - navbarHeight;
             
+            // Enhanced smooth scrolling
             window.scrollTo({
                 top: targetPosition,
                 behavior: 'smooth'
@@ -64,7 +64,8 @@ const LandingNavbar = ({ canLogin }) => {
         // Close the mobile menu
         setIsMobileMenuOpen(false);
     };
-      return (
+    
+    return (
         <nav className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ${
             isScrolled 
                 ? 'bg-white shadow-md' 
@@ -78,35 +79,54 @@ const LandingNavbar = ({ canLogin }) => {
                     </h2>
                 </Link>
                   {/* Desktop Menu - hidden on mobile/tablet */}
-                <div className="hidden md:flex items-center space-x-6">
+                <div className="hidden lg:flex items-center space-x-6">
                     <a 
                         href="#beranda" 
+                        onClick={handleNavLinkClick}
                         className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'beranda' ? 'text-blue-600 active' : ''}`}
                     >
                         Beranda
                     </a>
                     <a 
                         href="#tentang" 
+                        onClick={handleNavLinkClick}
                         className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'tentang' ? 'text-blue-600 active' : ''}`}
                     >
                         Tentang
                     </a>
                     <a 
+                        href="#preview" 
+                        onClick={handleNavLinkClick}
+                        className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'preview' ? 'text-blue-600 active' : ''}`}
+                    >
+                        Preview
+                    </a>
+                    <a 
                         href="#layanan" 
+                        onClick={handleNavLinkClick}
                         className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'layanan' ? 'text-blue-600 active' : ''}`}
                     >
-                        Layanan
+                        Fitur
+                    </a>
+                    <a 
+                        href="#faq" 
+                        onClick={handleNavLinkClick}
+                        className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'faq' ? 'text-blue-600 active' : ''}`}
+                    >
+                        FAQ
                     </a>
                     <a 
                         href="#kontak" 
-                        className={`nav-link text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${activeSection === 'kontak' ? 'text-blue-600 active' : ''}`}
+                        onClick={handleNavLinkClick}
+                        className={`nav-link bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300`}
                     >
-                        Kontak
+                        Download
                     </a>
                 </div>
-                  {/* Hamburger Menu Button - shown only on mobile/tablet */}
+                
+                {/* Hamburger Menu Button - shown only on mobile/tablet */}
                 <button 
-                    className="md:hidden flex flex-col justify-center items-center p-2 rounded-md hover:bg-gray-100 focus:outline-none transition-all duration-300"
+                    className="lg:hidden flex flex-col justify-center items-center p-2 rounded-md hover:bg-gray-100 focus:outline-none transition-all duration-300"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     aria-expanded={isMobileMenuOpen}
                     aria-label="Toggle menu"
@@ -116,15 +136,15 @@ const LandingNavbar = ({ canLogin }) => {
                     <span className={`w-6 h-0.5 bg-gray-700 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'bar-bottom-open' : ''}`}></span>
                 </button>
             </div>
-              {/* Mobile Menu - slide down animation */}
+            
+            {/* Mobile Menu - slide down animation */}
             <div 
-                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
                     isMobileMenuOpen 
-                        ? 'max-h-60 opacity-100 shadow-md mobile-menu-enter' 
+                        ? 'max-h-96 opacity-100 shadow-md mobile-menu-enter' 
                         : 'max-h-0 opacity-0 mobile-menu-exit'
                 } ${isScrolled || isMobileMenuOpen ? 'bg-white' : 'bg-white bg-opacity-90 backdrop-blur-sm'}`}
-            >
-                <div className="container mx-auto px-6 py-2 flex flex-col space-y-2">
+            >                <div className="container mx-auto px-6 py-2 flex flex-col space-y-2">
                     <a 
                         href="#beranda" 
                         className={`mobile-nav-item text-gray-700 hover:text-blue-600 px-3 py-3 rounded-md text-base font-medium border-b border-gray-100 transition-all duration-300 ${activeSection === 'beranda' ? 'text-blue-600 pl-4 border-l-4 border-l-blue-500' : ''}`}
@@ -140,18 +160,32 @@ const LandingNavbar = ({ canLogin }) => {
                         Tentang
                     </a>
                     <a 
+                        href="#preview" 
+                        className={`mobile-nav-item text-gray-700 hover:text-blue-600 px-3 py-3 rounded-md text-base font-medium border-b border-gray-100 transition-all duration-300 ${activeSection === 'preview' ? 'text-blue-600 pl-4 border-l-4 border-l-blue-500' : ''}`}
+                        onClick={handleNavLinkClick}
+                    >
+                        Preview
+                    </a>
+                    <a 
                         href="#layanan" 
                         className={`mobile-nav-item text-gray-700 hover:text-blue-600 px-3 py-3 rounded-md text-base font-medium border-b border-gray-100 transition-all duration-300 ${activeSection === 'layanan' ? 'text-blue-600 pl-4 border-l-4 border-l-blue-500' : ''}`}
                         onClick={handleNavLinkClick}
                     >
-                        Layanan
+                        Fitur
+                    </a>
+                    <a 
+                        href="#faq" 
+                        className={`mobile-nav-item text-gray-700 hover:text-blue-600 px-3 py-3 rounded-md text-base font-medium border-b border-gray-100 transition-all duration-300 ${activeSection === 'faq' ? 'text-blue-600 pl-4 border-l-4 border-l-blue-500' : ''}`}
+                        onClick={handleNavLinkClick}
+                    >
+                        FAQ
                     </a>
                     <a 
                         href="#kontak" 
-                        className={`mobile-nav-item text-gray-700 hover:text-blue-600 px-3 py-3 rounded-md text-base font-medium transition-all duration-300 ${activeSection === 'kontak' ? 'text-blue-600 pl-4 border-l-4 border-l-blue-500' : ''}`}
+                        className={`mobile-nav-item bg-blue-600 text-white hover:bg-blue-700 px-3 py-3 rounded-md text-base font-medium transition-all duration-300`}
                         onClick={handleNavLinkClick}
                     >
-                        Kontak
+                        Download Sekarang
                     </a>
                 </div>
             </div>

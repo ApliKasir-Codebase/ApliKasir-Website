@@ -21,8 +21,7 @@ export default function Sidebar() {
                     <Icon char="🏠" /> Beranda
                 </NavLink>                <NavLink href={route('users.index')} active={route().current('users.index') || route().current('users.*')} className="flex items-center">
                     <Icon char="👤" /> Pengguna
-                </NavLink>
-                <NavLink href={route('products.index')} active={route().current('products.index') || route().current('products.*')} className="flex items-center">
+                </NavLink>                <NavLink href={route('products.index')} active={route().current('products.index') || route().current('products.*')} className="flex items-center">
                     <Icon char="📦" /> Produk
                 </NavLink>
             </nav>

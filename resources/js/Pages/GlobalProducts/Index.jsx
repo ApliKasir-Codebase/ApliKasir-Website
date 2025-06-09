@@ -10,16 +10,19 @@ export default function Index({ products, filters = {} }) {
     const { flash } = usePage().props || {};
     const [deleting, setDeleting] = useState(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [activeFilter, setActiveFilter] = useState(filters.filter || '');    const confirmDelete = (productId) => {
+    const [activeFilter, setActiveFilter] = useState(filters.filter || '');
+
+    const confirmDelete = (productId) => {
         setDeleting(productId);
-        if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
-            router.delete(route('products.destroy', productId));
+        if (confirm('Apakah Anda yakin ingin menghapus produk global ini?')) {
+            router.delete(route('global-products.destroy', productId));
         }
         setDeleting(null);
     };
     
     const handleSearch = (e) => {
-        e.preventDefault();        router.get(route('products.index'), {
+        e.preventDefault();
+        router.get(route('global-products.index'), {
             search: searchTerm,
             filter: activeFilter,
         }, {
@@ -30,7 +33,7 @@ export default function Index({ products, filters = {} }) {
     
     const handleFilterChange = (filter) => {
         setActiveFilter(filter);
-        router.get(route('products.index'), {
+        router.get(route('global-products.index'), {
             search: searchTerm,
             filter: filter,
         }, {
@@ -41,18 +44,20 @@ export default function Index({ products, filters = {} }) {
 
     return (
         <div className="min-h-screen bg-white">
-            <Head title="Produk" />
+            <Head title="Produk Global" />
             
-            {/* Header */}            <DashboardHeader 
-                pageTitle="Produk" 
-                breadcrumb={[{ label: 'Produk' }]}
+            {/* Header */}
+            <DashboardHeader 
+                pageTitle="Produk Global" 
+                breadcrumb={[{ label: 'Produk Global' }]}
             />
             
             {/* Layout Utama */}
             <div className="flex min-h-screen pt-20">
                 <Sidebar />
 
-                {/* Konten Utama */}                <main className="flex-1 ml-64 p-6 lg:p-8 overflow-y-auto bg-white">
+                {/* Konten Utama */}
+                <main className="flex-1 ml-64 p-6 lg:p-8 overflow-y-auto bg-white">
                     <PageTransition>
                         {flash && flash.success && (
                             <FlashMessage message={flash.success} type="success" />
@@ -60,12 +65,15 @@ export default function Index({ products, filters = {} }) {
 
                         {flash && flash.error && (
                             <FlashMessage message={flash.error} type="error" />
-                        )}                        <div className="flex justify-between items-center mb-6">                            <h3 className="text-xl font-semibold text-gray-800">Data Produk</h3>
+                        )}
+                        
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-semibold text-gray-800">Repositori Produk Global</h3>
                             <Link
-                                href={route('products.create')}
+                                href={route('global-products.create')}
                                 className="px-4 py-2 text-white text-sm bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300"
                             >
-                                Tambah Produk
+                                Tambah Produk Global
                             </Link>
                         </div>
                         
@@ -92,7 +100,7 @@ export default function Index({ products, filters = {} }) {
                                             type="button"
                                             onClick={() => {
                                                 setSearchTerm('');
-                                                router.get(route('products.index'), { filter: activeFilter });
+                                                router.get(route('global-products.index'), { filter: activeFilter });
                                             }}
                                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-300"
                                         >
@@ -137,7 +145,8 @@ export default function Index({ products, filters = {} }) {
                         </div>
 
                         <div className="overflow-x-auto rounded-xl bg-white shadow-md">
-                            <table className="min-w-full divide-y divide-gray-200">                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NO</th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
@@ -150,21 +159,15 @@ export default function Index({ products, filters = {} }) {
                                             <span className="ml-1 text-xxs text-gray-400 font-normal italic">(Lihat detail untuk edit)</span>
                                         </th>
                                     </tr>
-                                </thead>                                    <tbody className="bg-white divide-y divide-gray-200">
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
                                     {products.data.length > 0 ? (
                                         products.data.map((product, index) => (
                                             <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-200">
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {(products.current_page - 1) * products.per_page + index + 1}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {product.kode_produk}
-                                                    {product.global_product_id && (
-                                                        <span className="ml-2 px-1 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
-                                                            Terverifikasi
-                                                        </span>
-                                                    )}
-                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.kode_produk}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.nama_produk}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.kategori || '-'}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.merek || '-'}</td>
@@ -172,8 +175,11 @@ export default function Index({ products, filters = {} }) {
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                         {product.is_active ? 'Aktif' : 'Tidak Aktif'}
                                                     </span>
-                                                </td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">                                                    <div className="flex space-x-2">                                                        <Link 
-                                                            href={route('user.products.show', product.id)} 
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    <div className="flex space-x-2">
+                                                        <Link 
+                                                            href={route('global-products.show', product.id)} 
                                                             className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
                                                             title="Lihat Detail"
                                                         >
@@ -199,7 +205,7 @@ export default function Index({ products, filters = {} }) {
                                     ) : (
                                         <tr>
                                             <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                                Tidak ada data produk.
+                                                Tidak ada data produk global.
                                             </td>
                                         </tr>
                                     )}

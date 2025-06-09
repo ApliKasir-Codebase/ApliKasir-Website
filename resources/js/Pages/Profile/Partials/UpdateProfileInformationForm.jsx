@@ -12,16 +12,19 @@ export default function UpdateProfileInformation({
 }) {
     const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            name: user.name,
-            email: user.email,
-        });
+    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
+        name: user.name,
+        email: user.email,
+        nomor: user.nomor || '',
+        alamat: user.alamat || '',
+        photo: null,
+        _method: 'patch', // Menggunakan metode PATCH
+    });
 
     const submit = (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'));
+        post(route('profile.update'));
     };
 
     return (

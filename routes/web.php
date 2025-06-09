@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\FirebaseTestController;
+use App\Http\Controllers\AppDownloadController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,14 +16,21 @@ use Inertia\Inertia;
 
 // Rute untuk Landing Page
 Route::get('/', function () {
-    // Jika Anda punya data khusus untuk landing page dari backend, pass di sini
+    // Get available app versions for download
+    $appDownloadController = new AppDownloadController();
+    $availableVersions = $appDownloadController->getAvailableVersions();
+    
     return Inertia::render('LandingPage', [
+        'availableVersions' => $availableVersions,
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'), // Jika Anda ingin tombol register di landing page
-        // 'laravelVersion' => Application::VERSION,
-        // 'phpVersion' => PHP_VERSION,
+        'canRegister' => Route::has('register'),
     ]);
 })->name('landing');
+
+// Rute untuk download aplikasi
+Route::get('/download-app/{filename}', [AppDownloadController::class, 'downloadApp'])
+    ->name('app.download')
+    ->where('filename', '[^/]+');
 
 // Rute Dashboard (Breeze sudah membuat ini)
 Route::get('/dashboard', function () {
@@ -72,6 +80,10 @@ Route::middleware('auth')->group(function () {
     
     // Rute untuk halaman produk
     Route::resource('products', \App\Http\Controllers\ProductController::class);
+    
+    // Rute untuk verifikasi kode produk
+    Route::post('products/verify-code', [\App\Http\Controllers\ProductController::class, 'verifyProductCode'])
+         ->name('products.verify-code');
     
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
