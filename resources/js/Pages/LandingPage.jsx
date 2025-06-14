@@ -35,7 +35,7 @@ export default function LandingPage({ canLogin, availableVersions = [] }) {
         "author": {
             "@type": "Organization",
             "name": "ApliKasir",
-            "url": "https://aplikasir.com"
+            "url": "https://aplikasir.my.id/",
         }
     };
 
@@ -50,7 +50,7 @@ export default function LandingPage({ canLogin, availableVersions = [] }) {
                 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://aplikasir.com/" />
+                <meta property="og:url" content="https://aplikasir.my.id/" />
                 <meta property="og:title" content="ApliKasir - Aplikasi Kasir Mobile Terdepan untuk UMKM Indonesia" />
                 <meta property="og:description" content="Revolusi cara Anda berbisnis dengan ApliKasir! Aplikasi kasir mobile all-in-one untuk UMKM dan retail." />
                 <meta property="og:image" content="/images/og-image.jpg" />
@@ -58,7 +58,7 @@ export default function LandingPage({ canLogin, availableVersions = [] }) {
 
                 {/* Twitter */}
                 <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:url" content="https://aplikasir.com/" />
+                <meta property="twitter:url" content="https://aplikasir.my.id/" />
                 <meta property="twitter:title" content="ApliKasir - Aplikasi Kasir Mobile Terdepan untuk UMKM Indonesia" />
                 <meta property="twitter:description" content="Revolusi cara Anda berbisnis dengan ApliKasir! Aplikasi kasir mobile all-in-one untuk UMKM dan retail." />
                 <meta property="twitter:image" content="/images/twitter-image.jpg" />
@@ -70,7 +70,7 @@ export default function LandingPage({ canLogin, availableVersions = [] }) {
                 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 
                 {/* Canonical URL */}
-                <link rel="canonical" href="https://aplikasir.com/" />
+                <link rel="canonical" href="https://aplikasir.my.id/" />
 
                 {/* JSON-LD Structured Data */}
                 <script type="application/ld+json">

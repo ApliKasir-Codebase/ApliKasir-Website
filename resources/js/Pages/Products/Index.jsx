@@ -173,7 +173,7 @@ export default function Index({ products, filters = {} }) {
                                                         {product.is_active ? 'Aktif' : 'Tidak Aktif'}
                                                     </span>
                                                 </td><td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">                                                    <div className="flex space-x-2">                                                        <Link 
-                                                            href={route('user.products.show', product.id)} 
+                                                            href={route('products.show', product.id)} 
                                                             className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
                                                             title="Lihat Detail"
                                                         >
