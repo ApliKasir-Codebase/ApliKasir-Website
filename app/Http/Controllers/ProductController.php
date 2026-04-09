@@ -187,8 +187,10 @@ class ProductController extends Controller
      * Display the specified product.
      */
     public function show(Product $product)
-    {        // Load transactions that reference this product
-        $product->load('transactions');        return Inertia::render('Products/Show', [
+    {
+        // Note: Transactions don't have direct product relationship
+        // Products are stored in transactions.detail_items (JSON)
+        return Inertia::render('Products/Show', [
             'product' => $product,
         ]);
     }

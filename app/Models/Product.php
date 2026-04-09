@@ -48,18 +48,9 @@ class Product extends Model
         'harga_jual' => 'decimal:2',
     ];
     
-    /**
-     * Get all the transactions that reference this product.
-     * 
-     * Produk berfungsi sebagai repositori produk yang bisa direferensikan dalam transaksi.
-     * Produk bisa bersifat global (tidak memiliki user_id) atau milik pengguna spesifik (memiliki user_id).
-     * Kode produk digunakan untuk verifikasi dan untuk katalog produk pada aplikasi pengguna.
-     * Data produk ini disinkronkan dengan aplikasi mobile untuk keperluan pencarian dan transaksi.
-     */
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class, 'product_id');
-    }
+    // Note: Transactions don't have direct product_id foreign key.
+    // Products are stored in transactions.detail_items (JSON field).
+    // To find transactions for a product, query the JSON field instead.
     
     /**
      * Get the user that owns the product.
