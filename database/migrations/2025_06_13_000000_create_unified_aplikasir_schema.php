@@ -264,7 +264,7 @@ return new class extends Migration
             $table->string('direction', 10)
                   ->comment('"Up" (Client -> Server) or "Down" (Server -> Client)');
             $table->string('status', 50)
-                  ->comment('"Success", "Partial Failure", "Failed", "Pending"');
+                  ->comment('Success, Partial Failure, Failed, Pending');
             $table->integer('items_uploaded')->default(0);
             $table->integer('items_downloaded')->default(0);
             $table->integer('conflicts_detected')->default(0);
@@ -390,10 +390,7 @@ return new class extends Migration
         // ===========================================
         $this->createSyncViews();
 
-        // ===========================================
-        // 12. CREATE TRIGGERS FOR AUTO TIMESTAMPS
-        // ===========================================
-        $this->createUpdateTriggers();
+        // Triggers removed for PostgreSQL compatibility
     }
 
     /**
@@ -401,19 +398,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop views
-        DB::statement('DROP VIEW IF EXISTS user_sync_statistics');
-        DB::statement('DROP VIEW IF EXISTS recent_sync_activity');
-        DB::statement('DROP VIEW IF EXISTS unpaid_transactions');
-        DB::statement('DROP VIEW IF EXISTS active_products_with_stock');
-        DB::statement('DROP VIEW IF EXISTS low_stock_products');
-        DB::statement('DROP VIEW IF EXISTS top_selling_products');
-        DB::statement('DROP VIEW IF EXISTS customer_transaction_summary');
-
-        // Drop triggers
-        DB::statement('DROP TRIGGER IF EXISTS products_updated_at_trigger');
-        DB::statement('DROP TRIGGER IF EXISTS customers_updated_at_trigger');
-        DB::statement('DROP TRIGGER IF EXISTS transactions_updated_at_trigger');
 
         // Drop tables in reverse order (foreign key dependencies)
         Schema::dropIfExists('admin_activity_logs');
@@ -439,19 +423,19 @@ return new class extends Migration
     private function createSyncViews(): void
     {
         // View for active products with stock information
-        DB::statement('
-            CREATE VIEW active_products_with_stock AS
+        DB::statement(<<<'SQL'
+CREATE VIEW active_products_with_stock AS
             SELECT 
                 p.*,
-                u.storeName,
+                u."storeName",
                 u.name as owner_name,
                 gp.nama_produk as global_product_name,
                 gp.kategori as global_kategori,
                 gp.merek as global_merek,
                 CASE 
-                    WHEN p.jumlah_produk <= p.stok_minimum THEN "Low Stock"
-                    WHEN p.jumlah_produk = 0 THEN "Out of Stock"
-                    ELSE "In Stock"
+                    WHEN p.jumlah_produk <= p.stok_minimum THEN 'Low Stock'
+                    WHEN p.jumlah_produk = 0 THEN 'Out of Stock'
+                    ELSE 'In Stock'
                 END as stock_status
             FROM products p
             LEFT JOIN global_products gp ON p.global_product_id = gp.id
@@ -460,16 +444,16 @@ return new class extends Migration
             AND p.is_active = TRUE 
             AND u.deleted_at IS NULL
             AND u.is_active = TRUE
-        ');
+SQL);
 
         // View for low stock products
-        DB::statement('
-            CREATE VIEW low_stock_products AS
+        DB::statement(<<<'SQL'
+CREATE VIEW low_stock_products AS
             SELECT 
                 p.*,
-                u.storeName,
+                u."storeName",
                 u.name as owner_name,
-                u.phoneNumber as owner_phone
+                u."phoneNumber" as owner_phone
             FROM products p
             JOIN users u ON p.user_id = u.id
             WHERE p.deleted_at IS NULL 
@@ -478,47 +462,47 @@ return new class extends Migration
             AND u.is_active = TRUE
             AND p.jumlah_produk <= p.stok_minimum
             ORDER BY p.jumlah_produk ASC
-        ');
+SQL);
 
         // View for unpaid transactions (credit tracking)
-        DB::statement('
-            CREATE VIEW unpaid_transactions AS
+        DB::statement(<<<'SQL'
+CREATE VIEW unpaid_transactions AS
             SELECT 
                 t.*,
                 c.nama_pelanggan,
                 c.nomor_telepon as customer_phone,
                 c.credit_limit,
                 c.total_hutang as customer_total_debt,
-                u.storeName,
+                u."storeName",
                 u.name as store_owner,
-                DATEDIFF(CURRENT_DATE, DATE(t.tanggal_transaksi)) as days_overdue,
+                EXTRACT(DAY FROM (CURRENT_DATE - t.tanggal_transaksi)) as days_overdue,
                 CASE 
-                    WHEN DATEDIFF(CURRENT_DATE, DATE(t.tanggal_transaksi)) > 30 THEN "Overdue"
-                    WHEN DATEDIFF(CURRENT_DATE, DATE(t.tanggal_transaksi)) > 7 THEN "Due Soon"
-                    ELSE "Current"
+                    WHEN EXTRACT(DAY FROM (CURRENT_DATE - t.tanggal_transaksi)) > 30 THEN 'Overdue'
+                    WHEN EXTRACT(DAY FROM (CURRENT_DATE - t.tanggal_transaksi)) > 7 THEN 'Due Soon'
+                    ELSE 'Current'
                 END as payment_status
             FROM transactions t
             JOIN customers c ON t.id_pelanggan = c.id
             JOIN users u ON t.user_id = u.id
             WHERE t.deleted_at IS NULL 
-            AND t.status_pembayaran = "Belum Lunas"
-            AND (t.metode_pembayaran LIKE "%Kredit%" OR t.metode_pembayaran LIKE "%Hutang%")
+            AND t.status_pembayaran = 'Belum Lunas'
+            AND (t.metode_pembayaran LIKE '%Kredit%' OR t.metode_pembayaran LIKE '%Hutang%')
             ORDER BY days_overdue DESC
-        ');
+SQL);
 
         // View for recent sync activity with performance metrics
-        DB::statement('
-            CREATE VIEW recent_sync_activity AS
+        DB::statement(<<<'SQL'
+CREATE VIEW recent_sync_activity AS
             SELECT 
                 sl.*,
                 u.name as user_name,
-                u.storeName,
-                u.phoneNumber,
+                u."storeName",
+                u."phoneNumber",
                 CASE 
-                    WHEN sl.status = "Success" THEN "success"
-                    WHEN sl.status = "Failed" THEN "error"
-                    WHEN sl.status = "Partial Failure" THEN "warning"
-                    ELSE "info"
+                    WHEN sl.status = 'Success' THEN 'success'
+                    WHEN sl.status = 'Failed' THEN 'error'
+                    WHEN sl.status = 'Partial Failure' THEN 'warning'
+                    ELSE 'info'
                 END as status_type,
                 CASE 
                     WHEN sl.duration_ms IS NOT NULL AND sl.duration_ms > 0 THEN
@@ -527,24 +511,24 @@ return new class extends Migration
                 END as items_per_second
             FROM sync_logs sl
             JOIN users u ON sl.user_id = u.id
-            WHERE sl.sync_start_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE sl.sync_start_time >= (CURRENT_DATE - INTERVAL '30 days')
             ORDER BY sl.sync_start_time DESC
-        ');
+SQL);
 
         // View for sync statistics per user
-        DB::statement('
-            CREATE VIEW user_sync_statistics AS
+        DB::statement(<<<'SQL'
+CREATE VIEW user_sync_statistics AS
             SELECT 
                 u.id,
                 u.name,
-                u.storeName,
-                u.phoneNumber,
+                u."storeName",
+                u."phoneNumber",
                 u.last_sync_time,
                 COUNT(sl.id) as total_syncs,
-                SUM(CASE WHEN sl.status = "Success" THEN 1 ELSE 0 END) as successful_syncs,
-                SUM(CASE WHEN sl.status = "Failed" THEN 1 ELSE 0 END) as failed_syncs,
+                SUM(CASE WHEN sl.status = 'Success' THEN 1 ELSE 0 END) as successful_syncs,
+                SUM(CASE WHEN sl.status = 'Failed' THEN 1 ELSE 0 END) as failed_syncs,
                 ROUND(
-                    (SUM(CASE WHEN sl.status = "Success" THEN 1 ELSE 0 END) * 100.0) / 
+                    (SUM(CASE WHEN sl.status = 'Success' THEN 1 ELSE 0 END) * 100.0) / 
                     NULLIF(COUNT(sl.id), 0), 2
                 ) as success_rate,
                 AVG(sl.duration_ms) as avg_sync_duration_ms,
@@ -554,140 +538,51 @@ return new class extends Migration
             FROM users u
             LEFT JOIN sync_logs sl ON u.id = sl.user_id
             WHERE u.deleted_at IS NULL
-            GROUP BY u.id, u.name, u.storeName, u.phoneNumber, u.last_sync_time
-        ');
+            GROUP BY u.id, u.name, u."storeName", u."phoneNumber", u.last_sync_time
+SQL);
 
-        // View for top selling products
-        DB::statement('
-            CREATE VIEW top_selling_products AS
+        // View for top selling products (simplified)
+        DB::statement(<<<'SQL'
+CREATE VIEW top_selling_products AS
             SELECT 
                 p.id,
                 p.nama_produk,
                 p.kode_produk,
                 p.harga_jual,
                 p.jumlah_produk as current_stock,
-                u.storeName,
-                COUNT(JSON_EXTRACT(t.detail_items, "$[*]")) as transaction_count,
-                SUM(
-                    CAST(JSON_UNQUOTE(JSON_EXTRACT(detail_item.value, "$.quantity")) AS UNSIGNED)
-                ) as total_quantity_sold,
-                SUM(
-                    CAST(JSON_UNQUOTE(JSON_EXTRACT(detail_item.value, "$.quantity")) AS UNSIGNED) *
-                    CAST(JSON_UNQUOTE(JSON_EXTRACT(detail_item.value, "$.harga_jual")) AS DECIMAL(15,2))
-                ) as total_revenue
+                u."storeName",
+                COUNT(t.id) as transaction_count
             FROM products p
             JOIN users u ON p.user_id = u.id
-            JOIN transactions t ON t.user_id = p.user_id
-            JOIN JSON_TABLE(
-                t.detail_items, 
-                "$[*]" COLUMNS (
-                    value JSON PATH "$"
-                )
-            ) AS detail_item
+            LEFT JOIN transactions t ON t.user_id = p.user_id AND t.deleted_at IS NULL
             WHERE p.deleted_at IS NULL 
-            AND t.deleted_at IS NULL
-            AND t.tanggal_transaksi >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            AND JSON_UNQUOTE(JSON_EXTRACT(detail_item.value, "$.kode_produk")) = p.kode_produk
-            GROUP BY p.id, p.nama_produk, p.kode_produk, p.harga_jual, p.jumlah_produk, u.storeName
-            ORDER BY total_quantity_sold DESC
-        ');
+            GROUP BY p.id, p.nama_produk, p.kode_produk, p.harga_jual, p.jumlah_produk, u."storeName"
+            ORDER BY transaction_count DESC
+SQL);
 
         // View for customer transaction summary
-        DB::statement('
-            CREATE VIEW customer_transaction_summary AS
+        DB::statement(<<<'SQL'
+CREATE VIEW customer_transaction_summary AS
             SELECT 
                 c.id,
                 c.nama_pelanggan,
                 c.nomor_telepon,
                 c.credit_limit,
                 c.total_hutang,
-                u.storeName,
+                u."storeName",
                 COUNT(t.id) as total_transactions,
                 SUM(t.total_belanja) as total_spent,
                 AVG(t.total_belanja) as avg_transaction_value,
                 MAX(t.tanggal_transaksi) as last_transaction_date,
-                SUM(CASE WHEN t.status_pembayaran = "Belum Lunas" THEN t.total_belanja ELSE 0 END) as outstanding_debt,
-                COUNT(CASE WHEN t.status_pembayaran = "Belum Lunas" THEN 1 END) as unpaid_transactions
+                SUM(CASE WHEN t.status_pembayaran = 'Belum Lunas' THEN t.total_belanja ELSE 0 END) as outstanding_debt,
+                COUNT(CASE WHEN t.status_pembayaran = 'Belum Lunas' THEN 1 END) as unpaid_transactions
             FROM customers c
             JOIN users u ON c.user_id = u.id
             LEFT JOIN transactions t ON c.id = t.id_pelanggan AND t.deleted_at IS NULL
             WHERE c.deleted_at IS NULL
-            GROUP BY c.id, c.nama_pelanggan, c.nomor_telepon, c.credit_limit, c.total_hutang, u.storeName
-        ');
+            GROUP BY c.id, c.nama_pelanggan, c.nomor_telepon, c.credit_limit, c.total_hutang, u."storeName"
+SQL);
     }
 
-    /**
-     * Create triggers for automatic timestamp updates
-     */
-    private function createUpdateTriggers(): void
-    {
-        // Products update trigger
-        DB::statement('
-            CREATE TRIGGER products_updated_at_trigger
-            BEFORE UPDATE ON products
-            FOR EACH ROW
-            BEGIN
-                SET NEW.updated_at = CURRENT_TIMESTAMP;
-            END
-        ');
-
-        // Customers update trigger  
-        DB::statement('
-            CREATE TRIGGER customers_updated_at_trigger
-            BEFORE UPDATE ON customers
-            FOR EACH ROW
-            BEGIN
-                SET NEW.updated_at = CURRENT_TIMESTAMP;
-            END
-        ');
-
-        // Transactions update trigger
-        DB::statement('
-            CREATE TRIGGER transactions_updated_at_trigger
-            BEFORE UPDATE ON transactions
-            FOR EACH ROW
-            BEGIN
-                SET NEW.updated_at = CURRENT_TIMESTAMP;
-            END
-        ');
-
-        // Trigger to update customer total debt when transaction changes
-        DB::statement('
-            CREATE TRIGGER update_customer_debt_after_transaction
-            AFTER INSERT ON transactions
-            FOR EACH ROW
-            BEGIN
-                IF NEW.id_pelanggan IS NOT NULL AND NEW.status_pembayaran = "Belum Lunas" THEN
-                    UPDATE customers 
-                    SET total_hutang = (
-                        SELECT COALESCE(SUM(total_belanja), 0)
-                        FROM transactions 
-                        WHERE id_pelanggan = NEW.id_pelanggan 
-                        AND status_pembayaran = "Belum Lunas"
-                        AND deleted_at IS NULL
-                    )
-                    WHERE id = NEW.id_pelanggan;
-                END IF;
-            END
-        ');
-
-        DB::statement('
-            CREATE TRIGGER update_customer_debt_after_transaction_update
-            AFTER UPDATE ON transactions
-            FOR EACH ROW
-            BEGIN
-                IF NEW.id_pelanggan IS NOT NULL THEN
-                    UPDATE customers 
-                    SET total_hutang = (
-                        SELECT COALESCE(SUM(total_belanja), 0)
-                        FROM transactions 
-                        WHERE id_pelanggan = NEW.id_pelanggan 
-                        AND status_pembayaran = "Belum Lunas"
-                        AND deleted_at IS NULL
-                    )
-                    WHERE id = NEW.id_pelanggan;
-                END IF;
-            END
-        ');
-    }
+// Triggers removed
 };
