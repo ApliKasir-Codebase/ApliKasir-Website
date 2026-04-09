@@ -4,7 +4,7 @@ Admin panel untuk sistem point of sale (POS) ApliKasir. Dibangun dengan Laravel 
 
 ## Fitur
 
-- **Manajemen Pengguna** - Kelola kasir dan pemilik toko dengan foto profil (Firebase Storage)
+- **Manajemen Pengguna** - Kelola kasir dan pemilik toko dengan foto profil
 - **Manajemen Produk** - Katalog produk global dan inventaris per toko
 - **QRIS Integration** - Generate kode QRIS untuk pembayaran digital
 - **Customer Management** - Database pelanggan
@@ -13,10 +13,10 @@ Admin panel untuk sistem point of sale (POS) ApliKasir. Dibangun dengan Laravel 
 
 ## Tech Stack
 
-- **Backend:** Laravel 11 + PHP 8.1+
+- **Backend:** Laravel 11 + PHP 8.2+
 - **Frontend:** React + Vite + Tailwind CSS
-- **Database:** MySQL
-- **Storage:** Firebase Storage (foto profil)
+- **Database:** PostgreSQL
+- **Storage:** Local storage (foto profil)
 - **Testing:** Pest PHP
 
 ## Instalasi
@@ -35,7 +35,8 @@ php artisan key:generate
 # Konfigurasi database di .env, lalu migrate
 php artisan migrate --seed
 
-# Setup Firebase Storage (lihat .env.example untuk variabel yang diperlukan)
+# Setup storage link untuk foto profil
+php artisan storage:link
 
 # Build assets dan jalankan
 npm run build
@@ -67,7 +68,7 @@ php artisan test
 ```
 app/
 ├── Models/          # User, Product, Customer, Transaction, dll
-├── Services/        # FirebaseStorageService, AdminActivityLogger
+├── Services/        # LocalStorageService, AdminActivityLogger
 ├── Http/           # Controllers dan middleware
 └── Policies/       # Authorization logic
 ```

@@ -28,7 +28,7 @@ class User extends Authenticatable
         'phoneNumber',
         'storeName',
         'storeAddress',
-        'profileImagePath', // Path gambar profil di Firebase Storage
+        'profileImagePath', // Path gambar profil di local storage
         'passwordHash',
         'kodeQR',           // Kode QRIS untuk pembayaran di aplikasi mobile
     ];
@@ -116,24 +116,11 @@ class User extends Authenticatable
         return $this->kodeQR;
     }
     
-    /**
-     * Check if profile image is a default image
-     * 
-     * Memeriksa apakah pengguna menggunakan gambar profil default
-     * atau telah mengunggah gambar profil kustom ke Firebase Storage.
-     * 
-     * @return bool True jika gambar profil adalah default, false jika kustom
-     */
     public function hasDefaultProfileImage()
     {
         return empty($this->profileImagePath) || str_contains($this->profileImagePath, 'default_avatar');
     }
     
-    /**
-     * Get the public URL of user's profile image
-     * 
-     * @return string URL publik gambar profil dari Firebase Storage atau gambar default
-     */
     public function getProfileImageUrl()
     {
         if ($this->hasDefaultProfileImage()) {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Transaction;
 use App\Services\AdminActivityLogger;
-use App\Services\FirebaseStorageService;
+use App\Services\LocalStorageService;
 use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -75,23 +75,20 @@ class UserController extends Controller
         $validated['kodeQR'] = 'QR-' . strtoupper(substr(md5(uniqid()), 0, 8));
         
         // Default profile image path
-        $validated['profileImagePath'] = 'https://firebasestorage.googleapis.com/v0/b/' . 
-            config('services.firebase.storage_bucket') . 
-            '/o/profile_images%2Fdefault_avatar.png?alt=media&token=default-token';
+        $validated['profileImagePath'] = asset('images/default_avatar.png');
         
-        // Handle profileImage upload ke Firebase Storage jika ada
+        // Handle profileImage upload ke local storage jika ada
         if ($request->hasFile('profileImage')) {
             $profileImage = $request->file('profileImage');
             $filename = 'profile_' . time() . '-' . rand(100000000, 999999999) . '.' . $profileImage->getClientOriginalExtension();
             
             try {
-                $firebaseStorage = new FirebaseStorageService();
-                $storagePath = 'profile_images/' . $filename;
-                $url = $firebaseStorage->uploadImage($profileImage->getRealPath(), $storagePath);
+                $storage = new LocalStorageService();
+                $url = $storage->uploadImage($profileImage->getRealPath(), $filename);
                 
                 $validated['profileImagePath'] = $url;
             } catch (\Exception $e) {
-                \Log::error("Firebase upload error: " . $e->getMessage());
+                \Log::error("Upload error: " . $e->getMessage());
                 return redirect()->back()->withErrors(['profileImage' => 'Gagal mengupload gambar: ' . $e->getMessage()]);
             }
         }
@@ -365,13 +362,11 @@ class UserController extends Controller
                 $extension = $profileImage->getClientOriginalExtension() ?: 'jpg';
                 $filename = "profile_{$user->id}_{$timestamp}-{$random}.{$extension}";
                 
-                // Upload to Firebase Storage
+                // Upload to local storage
                 try {
-                    $firebaseStorage = new \App\Services\FirebaseStorageService();
-                    $storagePath = "profile_images/{$filename}";
-                    $url = $firebaseStorage->uploadImage($profileImage->getRealPath(), $storagePath);
+                    $storage = new LocalStorageService();
+                    $url = $storage->uploadImage($profileImage->getRealPath(), $filename);
                     
-                    // Add image URL to the data to update
                     $dataToUpdate['profileImagePath'] = $url;
                     
                     \Log::info('Profile image uploaded successfully', [
@@ -379,11 +374,11 @@ class UserController extends Controller
                         'filename' => $filename
                     ]);
                 } catch (\Exception $e) {
-                    \Log::error('Firebase upload error', [
+                    \Log::error('Upload error', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
-                    throw new \Exception('Gagal mengupload ke Firebase: ' . $e->getMessage());
+                    throw new \Exception('Gagal mengupload gambar: ' . $e->getMessage());
                 }
             } catch (\Exception $e) {
                 \Log::error('Failed to process profile image', [
@@ -417,19 +412,18 @@ class UserController extends Controller
         $userName = $user->name;
         $userId = $user->id;
         
-        // Hapus foto profil dari Firebase Storage jika bukan default
+        // Hapus foto profil dari local storage jika bukan default
         if (!empty($user->profileImagePath) && !str_contains($user->profileImagePath, 'default_avatar')) {
             try {
-                $firebaseStorage = new FirebaseStorageService();
-                $oldFilename = ImageHelper::getFilenameFromFirebaseUrl($user->profileImagePath);
+                $storage = new LocalStorageService();
+                $oldFilename = basename($user->profileImagePath);
                 
                 if ($oldFilename) {
                     $oldPath = 'profile_images/' . $oldFilename;
-                    $firebaseStorage->deleteFile($oldPath);
+                    $storage->deleteFile($oldPath);
                 }
             } catch (\Exception $e) {
-                \Log::error("Firebase delete error on user {$userId}: " . $e->getMessage());
-                // Continue with deletion even if image deletion fails
+                \Log::error("Delete error on user {$userId}: " . $e->getMessage());
             }
         }
         

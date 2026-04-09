@@ -25,69 +25,7 @@ class ImageHelper
         return 'data:' . $type . ';base64,' . base64_encode($data);
     }
     
-    /**
-     * Mendapatkan nama file dari URL Firebase Storage
-     * 
-     * @param string $url URL Firebase Storage
-     * @return string|null Nama file atau null jika URL tidak valid
-     */
-    public static function getFilenameFromFirebaseUrl($url)
-    {
-        if (empty($url)) {
-            return null;
-        }
-        
-        // Extract filename dari URL Firebase Storage
-        if (strpos($url, 'firebasestorage.googleapis.com') === false) {
-            // Bukan URL Firebase Storage
-            return null;
-        }
-        
-        // Parse URL untuk mendapatkan komponennya
-        $parts = parse_url($url);
-        
-        if (!isset($parts['path'])) {
-            return null;
-        }
-        
-        // URL Firebase memiliki format:
-        // https://firebasestorage.googleapis.com/v0/b/BUCKET/o/FOLDER%2FFILENAME?alt=media...
-        
-        // Cari bagian filename dari path
-        $path = $parts['path'];
-        if (preg_match('/\/o\/([^?]+)/', $path, $matches)) {
-            // Decode URL encoded characters
-            $filePath = urldecode($matches[1]);
-            
-            // Jika path berisi folder, ambil bagian terakhir saja
-            if (strpos($filePath, '/') !== false) {
-                $pathParts = explode('/', $filePath);
-                return end($pathParts);
-            }
-            
-            return $filePath;
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Memeriksa apakah URL adalah URL Firebase Storage yang valid
-     * 
-     * @param string $url URL yang akan diperiksa
-     * @return bool True jika URL adalah URL Firebase Storage yang valid
-     */
-    public static function isValidFirebaseStorageUrl($url)
-    {
-        if (empty($url)) {
-            return false;
-        }
-        
-        // Periksa apakah URL dimulai dengan format yang benar
-        return (strpos($url, 'https://firebasestorage.googleapis.com') === 0) &&
-               (strpos($url, '/v0/b/') !== false) &&
-               (strpos($url, '/o/') !== false);
-    }
+
     
     /**
      * Mendapatkan ekstensi file dari nama file
