@@ -72,7 +72,7 @@ class GlobalProductController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Products/Index', [
+        return Inertia::render('GlobalProducts/Index', [
             'products' => $products,
             'filters' => [
                 'search' => $search,
@@ -154,7 +154,7 @@ class GlobalProductController extends Controller
         // Load user products that reference this global product
         $globalProduct->load('userProducts');
 
-        return Inertia::render('Products/Show', [
+        return Inertia::render('GlobalProducts/Show', [
             'product' => $globalProduct,
         ]);
     }
@@ -164,7 +164,7 @@ class GlobalProductController extends Controller
      */
     public function edit(GlobalProduct $globalProduct)
     {
-        return Inertia::render('Products/Edit', [
+        return Inertia::render('GlobalProducts/Edit', [
             'product' => $globalProduct,
         ]);
     }

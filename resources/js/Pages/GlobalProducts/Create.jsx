@@ -98,6 +98,7 @@ export default function Create() {
                                             className="mt-1 block w-full"
                                             value={data.kode_produk}
                                             onChange={(e) => setData('kode_produk', e.target.value)}
+                                            required
                                         />
                                         <InputError message={errors.kode_produk} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
