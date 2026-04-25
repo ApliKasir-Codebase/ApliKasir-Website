@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Sidebar from '@/Components/Dashboard/Sidebar';
@@ -10,7 +10,17 @@ export default function Index({ products, filters = {} }) {
     const { flash } = usePage().props || {};
     const [deleting, setDeleting] = useState(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [activeFilter, setActiveFilter] = useState(filters.filter || '');    const confirmDelete = (productId) => {
+    const [activeFilter, setActiveFilter] = useState(filters.filter || '');
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => setDropdownOpen(false);
+        if (dropdownOpen) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [dropdownOpen]);    const confirmDelete = (productId) => {
         setDeleting(productId);
         if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
             router.delete(route('products.destroy', productId));
@@ -60,13 +70,41 @@ export default function Index({ products, filters = {} }) {
 
                         {flash && flash.error && (
                             <FlashMessage message={flash.error} type="error" />
-                        )}                        <div className="flex justify-between items-center mb-6">                            <h3 className="text-xl font-semibold text-gray-800">Data Produk</h3>
-                            <Link
-                                href={route('products.create')}
-                                className="px-4 py-2 text-white text-sm bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300"
-                            >
-                                Tambah Produk
-                            </Link>
+                        )}                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-semibold text-gray-800">Data Produk</h3>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                                    className="px-4 py-2 text-white text-sm bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300 inline-flex items-center gap-2"
+                                >
+                                    Tambah Produk
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {dropdownOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                        <div className="py-1">
+                                            <Link
+                                                href={route('products.create')}
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Tambah Produk ke Inventori
+                                            </Link>
+                                            <Link
+                                                href={route('global-products.create')}
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Tambah Produk Global
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
                         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
