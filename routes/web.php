@@ -86,6 +86,10 @@ Route::middleware('auth')->group(function () {
     
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rute untuk halaman pelanggan dan transaksi (Anggota 6)
+    Route::resource('customers', \App\Http\Controllers\CustomerController::class);
+    Route::resource('transactions', \App\Http\Controllers\TransactionController::class)->only(['index', 'show']);
 });
 
 // Rute Autentikasi lainnya (Breeze sudah membuat ini)
