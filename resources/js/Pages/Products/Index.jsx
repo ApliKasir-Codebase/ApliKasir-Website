@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 import Sidebar from '@/Components/Dashboard/Sidebar';
@@ -12,13 +12,19 @@ export default function Index({ products, filters = {} }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [activeFilter, setActiveFilter] = useState(filters.filter || '');
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = () => setDropdownOpen(false);
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+
         if (dropdownOpen) {
-            document.addEventListener('click', handleClickOutside);
-            return () => document.removeEventListener('click', handleClickOutside);
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
         }
     }, [dropdownOpen]);    const confirmDelete = (productId) => {
         setDeleting(productId);
@@ -72,10 +78,13 @@ export default function Index({ products, filters = {} }) {
                             <FlashMessage message={flash.error} type="error" />
                         )}                        <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-semibold text-gray-800">Data Produk</h3>
-                            <div className="relative">
+                            <div ref={dropdownRef} className="relative">
                                 <button
                                     type="button"
-                                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDropdownOpen(!dropdownOpen);
+                                    }}
                                     className="px-4 py-2 text-white text-sm bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300 inline-flex items-center gap-2"
                                 >
                                     Tambah Produk
