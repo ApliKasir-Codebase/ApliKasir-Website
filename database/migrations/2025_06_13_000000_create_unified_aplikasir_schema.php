@@ -422,6 +422,10 @@ return new class extends Migration
      */
     private function createSyncViews(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // View for active products with stock information
         DB::statement(<<<'SQL'
 CREATE VIEW active_products_with_stock AS

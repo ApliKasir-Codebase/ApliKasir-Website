@@ -31,40 +31,10 @@ Route::get('/download-app/{filename}', [AppDownloadController::class, 'downloadA
     ->name('app.download')
     ->where('filename', '[^/]+');
 
-// Rute Dashboard (Breeze sudah membuat ini)
-Route::get('/dashboard', function () {
-    // Data untuk kartu statistik
-    $statsData = [
-        ['title' => 'Pengguna Harian', 'value' => '124', 'icon' => 'UserIcon'], // Ganti 'UserIcon' dengan nama ikon yang sesuai
-        ['title' => 'Pengguna Baru', 'value' => '124', 'icon' => 'UserPlusIcon'],
-        ['title' => 'Scan Harian', 'value' => '124', 'icon' => 'ScanIcon'],
-        ['title' => 'Total Pengguna', 'value' => '124', 'icon' => 'UsersIcon'],
-    ];
-
-    // Ambil log aktivitas admin terbaru
-    $activityLogs = \App\Models\AdminActivityLog::with('admin')
-        ->orderBy('created_at', 'desc')
-        ->limit(10)
-        ->get()
-        ->map(function($log) {
-            return [
-                'id' => $log->id,
-                'user' => $log->admin ? $log->admin->name : 'Admin',
-                'action' => $log->action,
-                'module' => $log->module,
-                'description' => $log->description,
-                'timestamp' => $log->created_at->format('d/m/Y, H:i:s'),
-                'ip_address' => $log->ip_address,
-                'user_agent' => $log->user_agent,
-                'details' => $log->details,
-            ];
-        });
-
-    return Inertia::render('Dashboard/Index', [
-        'stats' => $statsData,
-        'activities' => $activityLogs,
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Rute Dashboard
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Rute Profil (Breeze sudah membuat ini)
 Route::middleware('auth')->group(function () {
