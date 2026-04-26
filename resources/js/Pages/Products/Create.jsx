@@ -14,6 +14,7 @@ export default function Create({ users = [], catalogProducts = [] }) {
     const user = auth?.user;
 
     const [previewImage, setPreviewImage] = useState(null);
+    const [imageError, setImageError] = useState(null);
     const [verifying, setVerifying] = useState(false);
     const [verificationStatus, setVerificationStatus] = useState(null);
 
@@ -63,7 +64,7 @@ export default function Create({ users = [], catalogProducts = [] }) {
         }
     };
 
-    const verifyProductCode = () => {
+    const verifyProductCode = async () => {
         if (!data.kode_produk || data.kode_produk.trim() === '') {
             setVerificationStatus({ status: 'error', message: 'Kode produk tidak boleh kosong' });
             return;
@@ -71,40 +72,49 @@ export default function Create({ users = [], catalogProducts = [] }) {
         setVerifying(true);
         setVerificationStatus(null);
 
-        fetch(route('products.verify-code'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ kode_produk: data.kode_produk }),
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.success) {
-                setVerificationStatus({ status: 'success', message: res.message, product: res.product });
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch(route('products.verify-code'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ kode_produk: data.kode_produk }),
+            });
+
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const message = payload?.message || 'Terjadi kesalahan saat verifikasi kode produk';
+                setVerificationStatus({ status: 'error', message });
+                return;
+            }
+
+            if (payload?.success) {
+                setVerificationStatus({ status: 'success', message: payload.message, product: payload.product });
                 // Set global product reference, copy fields if needed
-                if (res.product) {
-                    setData('global_product_id', res.product.id);
+                if (payload.product) {
+                    setData('global_product_id', payload.product.id);
                     // Pre-fill other fields only if empty (manual inputs may take precedence)
-                    if (!data.nama_produk) setData('nama_produk', res.product.nama_produk);
-                    if (!data.kategori) setData('kategori', res.product.kategori || '');
-                    if (!data.merek) setData('merek', res.product.merek || '');
-                    if (!data.deskripsi) setData('deskripsi', res.product.deskripsi || '');
-                    if (res.product.gambar_produk) {
-                        setPreviewImage(`/storage/${res.product.gambar_produk}`);
+                    if (!data.nama_produk) setData('nama_produk', payload.product.nama_produk);
+                    if (!data.kategori) setData('kategori', payload.product.kategori || '');
+                    if (!data.merek) setData('merek', payload.product.merek || '');
+                    if (!data.deskripsi) setData('deskripsi', payload.product.deskripsi || '');
+                    if (payload.product.gambar_produk) {
+                        setPreviewImage(`/storage/${payload.product.gambar_produk}`);
                     }
                 }
             } else {
-                setVerificationStatus({ status: 'error', message: res.message || 'Kode produk tidak valid' });
+                setVerificationStatus({ status: 'error', message: payload?.message || 'Kode produk tidak valid' });
             }
-        })
-        .catch(() => {
+        } catch {
             setVerificationStatus({ status: 'error', message: 'Terjadi kesalahan saat verifikasi kode produk' });
-        })
-        .finally(() => {
+        } finally {
             setVerifying(false);
-        });
+        }
     };
 
     const handleImageChange = (e) => {
@@ -113,14 +123,15 @@ export default function Create({ users = [], catalogProducts = [] }) {
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
             setData('gambar_produk', null);
-            usePage().props.errors = { gambar_produk: 'File harus berupa gambar (JPG, PNG, GIF, atau WEBP)' };
+            setImageError('File harus berupa gambar (JPG, PNG, GIF, atau WEBP)');
             return;
         }
         if (file.size > 2 * 1024 * 1024) {
             setData('gambar_produk', null);
-            usePage().props.errors = { gambar_produk: 'Ukuran gambar maksimal 2MB' };
+            setImageError('Ukuran gambar maksimal 2MB');
             return;
         }
+        setImageError(null);
         setData('gambar_produk', file);
         const reader = new FileReader();
         reader.onloadend = () => setPreviewImage(reader.result);
@@ -334,7 +345,7 @@ export default function Create({ users = [], catalogProducts = [] }) {
                                             onChange={handleImageChange}
                                             accept="image/*"
                                         />
-                                        <InputError message={errors.gambar_produk} className="mt-2" />
+                                        <InputError message={imageError || errors.gambar_produk} className="mt-2" />
                                         
                                         {(previewImage || (data.gambar_produk && typeof data.gambar_produk === 'string')) && (
                                             <div className="mt-4">

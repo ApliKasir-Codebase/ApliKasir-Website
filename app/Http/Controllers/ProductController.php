@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\GlobalProduct;
 use App\Models\Product;
 use App\Models\User;
@@ -26,6 +27,9 @@ class ProductController extends Controller
 
         $query = Product::query();
 
+        $currentUser = auth()->user();
+        $isAdmin = $currentUser instanceof Admin && $currentUser->is_super_admin;
+
         // Apply scope
         if ($scope === 'catalog') {
             $query->catalog(); // Only global catalog products
@@ -33,7 +37,7 @@ class ProductController extends Controller
             $query->ownedBy(auth()->id()); // Only current user's products
         } else {
             // For regular users: show only global products and their own
-            if (! auth()->user()->isAdmin) {
+            if (! $isAdmin) {
                 $query->where(function ($q) {
                     $q->whereNull('user_id')
                         ->orWhere('user_id', auth()->id());
@@ -63,7 +67,8 @@ class ProductController extends Controller
             }
         }
 
-        $products = $query->orderBy('nama_produk')
+        $products = $query->orderByDesc('created_at')
+            ->orderBy('nama_produk')
             ->paginate(10)
             ->withQueryString();
 
@@ -118,6 +123,16 @@ class ProductController extends Controller
             'deskripsi' => 'nullable|string',
             'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if (! empty($validated['kode_produk']) && Product::where('user_id', $validated['user_id'])
+            ->where('kode_produk', $validated['kode_produk'])
+            ->exists()) {
+            return back()
+                ->withErrors([
+                    'kode_produk' => 'Kode produk sudah digunakan untuk toko ini.',
+                ])
+                ->withInput();
+        }
 
         // If a global product is selected, fill missing fields from it
         if (! empty($validated['global_product_id'])) {
